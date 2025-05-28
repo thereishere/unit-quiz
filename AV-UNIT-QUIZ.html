@@ -1,0 +1,3534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>AV Unit Quiz</title>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+   <style>
+       body {
+           font-family: Arial, sans-serif;
+           margin: 0;
+           padding: 0;
+           display: flex;
+           flex-direction: column;
+           height: 100vh;
+           overflow: hidden;
+       }
+       header {
+           background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+           color: white;
+           padding: 8px 20px;
+           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+           z-index: 100;
+       }
+       .header-content {
+           display: flex;
+           align-items: center;
+           justify-content: space-between;
+           gap: 15px;
+           flex-wrap: wrap;
+       }
+       
+       /* Title Section - Fixed left */
+       .title-section {
+           display: flex;
+           flex-direction: column;
+           align-items: flex-start;
+           flex-shrink: 0;
+       }
+       
+       h1 {
+           font-size: 20px;
+           font-weight: bold;
+           margin: 0;
+           line-height: 1.2;
+       }
+       
+       .overall-progress {
+           font-size: 12px;
+           color: rgba(255, 255, 255, 0.9);
+           margin-top: 2px;
+       }
+       
+       /* Region Buttons - Flexible center */
+       .region-section {
+           display: flex;
+           justify-content: center;
+           flex-grow: 1;
+           min-width: 0;
+       }
+       
+       .region-buttons {
+           display: flex;
+           gap: 8px;
+           align-items: center;
+           justify-content: center;
+           flex-wrap: wrap;
+       }
+       
+       .region-btn {
+           background-color: rgba(255, 255, 255, 0.2);
+           border: none;
+           border-radius: 6px;
+           padding: 8px 12px;
+           color: white;
+           cursor: pointer;
+           transition: all 0.2s;
+           width: 127px;
+           text-align: center;
+           flex-shrink: 0;
+           display: flex;
+           flex-direction: column;
+       }
+       
+       .region-btn:hover {
+           background-color: rgba(255, 255, 255, 0.3);
+       }
+       
+       .region-btn.active {
+           background-color: white;
+           color: #4f46e5;
+           font-weight: bold;
+           box-shadow: 0 0 25px rgba(255, 255, 255, 1.0);
+       }
+       
+       .region-btn.disabled {
+           background-color: rgba(255, 255, 255, 0.1);
+           color: rgba(255, 255, 255, 0.5);
+           cursor: not-allowed;
+           opacity: 0.7;
+           border: 2px solid transparent;
+       }
+       
+       .region-name {
+           font-size: 13px;
+           font-weight: bold;
+           line-height: 1.2;
+       }
+       
+       .region-progress {
+           font-size: 11px;
+           line-height: 1.2;
+           margin-top: 1px;
+       }
+       
+       /* Controls Section - Fixed right */
+       .controls-section {
+           display: flex;
+           align-items: center;
+           gap: 12px;
+           flex-shrink: 0;
+           flex-wrap: wrap;
+       }
+       
+       /* Header dividers */
+       .header-divider {
+           width: 1px;
+           height: 30px;
+           background-color: rgba(255, 255, 255, 0.3);
+           margin: 0 4px;
+       }
+       
+       /* Two-line progress buttons */
+       .progress-btn {
+           background-color: white;
+           color: #4f46e5;
+           border: none;
+           border-radius: 6px;
+           padding: 6px 12px;
+           font-weight: bold;
+           cursor: pointer;
+           transition: all 0.2s;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           min-width: 70px;
+           text-align: center;
+       }
+       
+       .progress-btn:hover {
+           background-color: #f8fafc;
+           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+       }
+       
+       .progress-btn-top {
+           font-size: 12px;
+           font-weight: bold;
+           line-height: 1.2;
+       }
+       
+       .progress-btn-bottom {
+           font-size: 10px;
+           line-height: 1.2;
+           margin-top: 1px;
+           color: #6366f1;
+       }
+       
+       /* File input styling */
+       .file-input-label {
+           background-color: white;
+           color: #4f46e5;
+           border: none;
+           border-radius: 6px;
+           padding: 6px 12px;
+           font-weight: bold;
+           cursor: pointer;
+           transition: all 0.2s;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           min-width: 70px;
+           text-align: center;
+       }
+       
+       .file-input-label:hover {
+           background-color: #f8fafc;
+           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+       }
+       
+       .file-input {
+           display: none;
+       }
+.drag-drop-area {
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 20px;  /* Changed from 40px */
+    text-align: center;
+    background-color: #f8fafc;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin: 10px 0;  /* Changed from 20px 0 */
+}
+
+.drag-drop-area.drag-over {
+    border-color: #4f46e5;
+    background-color: #eef2ff;
+    transform: scale(1.02);
+}
+
+.drag-drop-area:hover {
+    border-color: #6366f1;
+    background-color: #f1f5f9;
+}
+
+.drag-drop-text {
+    font-size: 16px;
+    color: #64748b;
+    margin-bottom: 10px;
+}
+
+.drag-drop-subtext {
+    font-size: 14px;
+    color: #94a3b8;
+}     
+       /* Toggle and Feedback Stack */
+       .toggle-feedback-stack {
+           display: flex;
+           flex-direction: column;
+           gap: 4px;
+           align-items: center;
+       }
+       
+       .feedback-btn-short {
+           background-color: #10b981;
+           color: white;
+           border: none;
+           border-radius: 3px;
+           padding: 3px 10px;
+           font-size: 10px;
+           font-weight: bold;
+           cursor: pointer;
+           transition: all 0.2s;
+           text-decoration: none;
+           display: inline-block;
+       }
+       
+       .feedback-btn-short:hover {
+           background-color: #059669;
+           box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+           color: white;
+           text-decoration: none;
+       }
+       
+       .toggle-container {
+           display: flex;
+           align-items: center;
+           gap: 8px;
+           background-color: rgba(255, 255, 255, 0.15);
+           padding: 6px 12px;
+           border-radius: 6px;
+       }
+       
+       .toggle-switch {
+           position: relative;
+           display: inline-block;
+           width: 44px;
+           height: 20px;
+       }
+       
+       .toggle-switch input {
+           opacity: 0;
+           width: 0;
+           height: 0;
+       }
+       
+       .toggle-slider {
+           position: absolute;
+           cursor: pointer;
+           top: 0;
+           left: 0;
+           right: 0;
+           bottom: 0;
+           background-color: rgba(255, 255, 255, 0.3);
+           transition: .3s;
+           border-radius: 20px;
+       }
+       
+       .toggle-slider:before {
+           position: absolute;
+           content: "";
+           height: 16px;
+           width: 16px;
+           left: 2px;
+           bottom: 2px;
+           background-color: white;
+           transition: .3s;
+           border-radius: 50%;
+       }
+       
+       input:checked + .toggle-slider {
+           background-color: #10b981;
+       }
+       
+       input:checked + .toggle-slider:before {
+           transform: translateX(24px);
+       }
+       
+       .toggle-label {
+           font-size: 12px;
+           font-weight: 500;
+           color: white;
+       }
+       
+       /* Responsive design */
+       @media (max-width: 1200px) {
+           .region-buttons {
+               gap: 6px;
+           }
+           
+           .region-btn {
+               width: 115px;
+               padding: 6px 8px;
+           }
+           
+           .controls-section {
+               gap: 8px;
+           }
+       }
+ .form-input.validating {
+    background-color: #fef3c7;
+    border-color: #f59e0b;
+    position: relative;
+}
+
+.form-input.validating::after {
+    content: "⏳";
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    pointer-events: none;
+}      
+       @media (max-width: 1000px) {
+           .header-content {
+               gap: 10px;
+           }
+           
+           .region-btn {
+               width: 100px;
+               padding: 6px;
+           }
+           
+           .region-name {
+               font-size: 12px;
+           }
+           
+           .region-progress {
+               font-size: 10px;
+           }
+       }
+       
+       @media (max-width: 800px) {
+           .header-content {
+               flex-direction: column;
+               align-items: stretch;
+               gap: 12px;
+           }
+           
+           .title-section {
+               align-self: center;
+           }
+           
+           .region-section {
+               order: 2;
+           }
+           
+           .controls-section {
+               order: 3;
+               justify-content: center;
+           }
+           
+           .region-buttons {
+               justify-content: center;
+           }
+       }
+       
+       @media (max-width: 600px) {
+           .region-buttons {
+               gap: 4px;
+           }
+           
+           .region-btn {
+               width: 80px;
+               padding: 4px;
+           }
+           
+           .region-name {
+               font-size: 11px;
+           }
+           
+           .region-progress {
+               font-size: 9px;
+           }
+           
+           .controls-section {
+               flex-wrap: wrap;
+               justify-content: center;
+               gap: 8px;
+           }
+       }
+       
+       .main-container {
+           display: flex;
+           flex: 1;
+           overflow: hidden;
+           position: relative;
+       }
+       .map-container {
+           position: relative;
+           width: calc(100% - 580px);
+           overflow: hidden;
+           background-color: #8e8e8e;
+       }
+       .map-inner-container {
+           position: absolute;
+           top: 0;
+           left: 0;
+           width: 100%;
+           height: 100%;
+           overflow: hidden;
+           cursor: grab;
+           background-color: #8e8e8e;
+       }
+       .map-inner-container.grabbing {
+           cursor: grabbing;
+       }
+       .map-content {
+           position: relative;
+           transform-origin: 0 0;
+           transition: transform 0.1s ease;
+           user-select: none;
+           -webkit-user-drag: none;
+       }
+       .map-image {
+           display: block;
+           width: 100%;
+           height: auto;
+           user-select: none;
+           -webkit-user-drag: none;
+           pointer-events: none;
+       }
+       .grid-overlay {
+           position: absolute;
+           top: 0;
+           left: 0;
+           width: 100%;
+           height: 100%;
+           pointer-events: none;
+       }
+       .grid-line-h {
+           position: absolute;
+           left: 0;
+           right: 0;
+           height: 0.3px;
+           background-color: rgba(37, 99, 235, 0.7);
+           transition: opacity 0.3s;
+       }
+       .grid-line-v {
+           position: absolute;
+           top: 0;
+           bottom: 0;
+           width: 0.3px;
+           background-color: rgba(37, 99, 235, 0.7);
+           transition: opacity 0.3s;
+       }
+       .hidden-grid .grid-line-h,
+       .hidden-grid .grid-line-v,
+       .hidden-grid .col-label,
+       .hidden-grid .row-label,
+       .hidden-grid .grid-cell {
+           opacity: 0;
+           pointer-events: none;
+       }
+       .col-label {
+           position: absolute;
+           top: 2px;
+           transform: translateX(-50%);
+           background-color: #2563eb;
+           color: white;
+           padding: 2px 4px;
+           font-size: 10px;
+           border-radius: 2px;
+           z-index: 10;
+           transition: opacity 0.3s;
+       }
+       .row-label {
+           position: absolute;
+           left: 2px;
+           transform: translateY(-50%);
+           background-color: #2563eb;
+           color: white;
+           padding: 2px 4px;
+           font-size: 10px;
+           border-radius: 2px;
+           z-index: 10;
+           transition: opacity 0.3s;
+       }
+       .grid-cell {
+           position: absolute;
+           background-color: transparent;
+           z-index: 5;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           font-weight: bold;
+           color: transparent;
+           transition: background-color 0.2s, color 0.2s;
+           pointer-events: none;
+       }
+       .grid-cell.hover {
+           background-color: rgba(34, 197, 94, 0.3);
+           color: black;
+       }
+       .station-pin {
+           position: absolute;
+           transform: translate(-50%, -50%);
+           cursor: pointer;
+           z-index: 20;
+       }
+       .progress-circle {
+           position: relative;
+           width: 100%;
+           height: 100%;
+           border-radius: 50%;
+           background-color: #ef4444;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           color: white;
+           font-weight: bold;
+           transition: background-color 0.3s;
+           font-size: 0px;
+       }
+       .station-label {
+           position: absolute;
+           background-color: rgba(0, 0, 0, 0.7);
+           color: white;
+           padding: 2px 6px;
+           border-radius: 4px;
+           white-space: nowrap;
+           transform-origin: center;
+           transition: all 0.2s;
+       }
+       .station-label.above {
+           bottom: 55%;
+           left: 50%;
+           transform: translateX(-50%);
+           text-align: center;
+       }
+       .station-label.below {
+           top: 60%;
+           left: 50%;
+           transform: translateX(-50%);
+           text-align: center;
+       }
+       .station-label.left {
+           top: 50%;
+           right: 18.5%;
+           transform: translateY(-50%);
+           text-align: right;
+       }
+       .station-label.right {
+           top: 50%;
+           left: 18.5%;
+           transform: translateY(-50%);
+           text-align: left;
+       }
+       
+       /* Special styling for Metro region station labels */
+       .metro-region .station-label {
+           font-size: 8.4px !important;
+           padding: 1px 3px !important;
+       }
+       .metro-region .station-label.above {
+           bottom: 20% !important;
+       }
+       .metro-region .station-label.below {
+           top: 25% !important;
+       }
+       .metro-region .station-label.left {
+           right: 18.5% !important;
+           transform: translateY(-50%) translateX(-3px) !important;
+           font-size: 4.4px !important;
+           padding: 0.21px 2px !important;
+       }
+       .metro-region .station-label.right {
+           left: 18.5% !important;  
+           transform: translateY(-50%) translateX(3px) !important;
+           font-size: 4.4px !important;
+           padding: 0.21px 2px !important;
+       }
+       .metro-region .station-label.left,
+       .metro-region .station-label.right {
+           min-width: 16px !important;
+           text-align: center !important;
+           white-space: nowrap !important;
+       }
+       .metro-region .progress-circle {
+           font-size: 1.0px !important;
+       }
+       
+       .pin-active .progress-circle {
+           border: 2px solid white;
+       }
+       .form-container {
+           position: absolute;
+           top: 0;
+           right: 0;
+           bottom: 0;
+           width: 580px;
+           background-color: #f8fafc;
+           border-left: 1px solid #e2e8f0;
+           padding: 20px;
+           overflow-y: auto;
+           display: block;
+           box-sizing: border-box;
+       }
+       .station-header {
+           margin-bottom: 20px;
+           border-bottom: 2px solid #e2e8f0;
+           padding-bottom: 10px;
+       }
+       .station-name {
+           font-size: 24px;
+           font-weight: bold;
+           margin: 0;
+       }
+       .station-grid {
+           font-size: 14px;
+           color: #64748b;
+       }
+       
+       /* Table responsive container */
+       .table-responsive {
+           overflow-x: auto;
+           margin-bottom: 20px;
+       }
+       
+       .quiz-table {
+           width: 100%;
+           border-collapse: separate;
+           border-spacing: 0 5px;
+           margin-bottom: 0;
+           table-layout: fixed;
+       }
+       
+       .quiz-table th, 
+       .quiz-table td {
+           padding: 8px 3px;
+           text-align: left;
+           border-bottom: 1px solid #e2e8f0;
+           vertical-align: middle;
+       }
+       
+       .quiz-table th {
+           background-color: #f1f5f9;
+           font-weight: bold;
+           font-size: 12px;
+           position: sticky;
+           top: 0;
+           z-index: 10;
+       }
+       
+       /* Column widths */
+       .quiz-table .unit-number {
+           width: 30px;
+           text-align: center;
+       }
+       
+       .quiz-table .unit-callsign-column {
+           width: 110px;
+       }
+       
+       .quiz-table .unit-name-column {
+           width: 140px;
+       }
+       
+       .quiz-table .unit-type-column {
+           width: 90px;
+       }
+       
+       .quiz-table .shift-type-column {
+           width: 80px;
+       }
+       
+       .quiz-table .hint-column {
+           width: 40px;
+           text-align: center;
+       }
+       
+       .form-input {
+           width: 100%;
+           padding: 6px 4px;
+           border: 1px solid #cbd5e1;
+           border-radius: 4px;
+           box-sizing: border-box;
+           font-size: 13px;
+       }
+       
+       .form-input.correct {
+           background-color: #dcfce7;
+           border-color: #22c55e;
+       }
+       
+       .form-input.incorrect {
+           background-color: #fee2e2;
+           border-color: #ef4444;
+       }
+       
+       .form-input.hint-active {
+           background-color: #fef9c3;
+           border-color: #facc15;
+           font-style: italic;
+       }
+       
+       .form-input.auto-correct {
+           background-color: #dcfce7;
+           border-color: #22c55e;
+           color: #64748b;
+           font-style: italic;
+       }
+       
+       .form-input:disabled {
+           background-color: #f1f5f9;
+           color: #64748b;
+           cursor: not-allowed;
+       }
+       
+       input.callsign-input {
+           width: 100px;
+           text-transform: uppercase;
+       }
+       
+       input.unit-name-input {
+           width: 130px;
+       }
+       
+       .select-container {
+           position: relative;
+           width: 100%;
+       }
+       
+       select.form-input {
+           background-color: white;
+           width: 100%;
+           padding-right: 15px;
+           appearance: none;
+       }
+       
+       select.unit-type-select {
+           min-width: 80px;
+       }
+       
+       select.shift-type-select {
+           min-width: 70px;
+       }
+       
+       .select-arrow {
+           position: absolute;
+           right: 5px;
+           top: 50%;
+           transform: translateY(-50%);
+           pointer-events: none;
+           font-size: 8px;
+           color: #64748b;
+       }
+       
+       .hint-btn {
+           background-color: #e2e8f0;
+           color: #64748b;
+           border: none;
+           padding: 4px;
+           border-radius: 4px;
+           cursor: pointer;
+           font-size: 11px;
+           font-weight: bold;
+           width: 34px;
+           white-space: nowrap;
+       }
+       
+       .hint-btn:hover {
+           background-color: #cbd5e1;
+       }
+       
+       .reset-buttons {
+           display: flex;
+           gap: 10px;
+           margin-top: 20px;
+           padding-top: 15px;
+           border-top: 1px solid #e2e8f0;
+       }
+       
+       .reset-btn {
+           flex: 1;
+           background-color: #dc2626;
+           color: white;
+           border: none;
+           padding: 10px 15px;
+           border-radius: 4px;
+           cursor: pointer;
+           font-weight: bold;
+           font-size: 12px;
+           transition: background-color 0.2s;
+       }
+       
+       .reset-btn:hover {
+           background-color: #b91c1c;
+       }
+       
+       .reset-btn.secondary {
+           background-color: #ea580c;
+       }
+       
+       .reset-btn.secondary:hover {
+           background-color: #c2410c;
+       }
+       
+       /* Show Data Button moved to below reset buttons */
+       .show-data-section {
+           margin-top: 15px;
+           padding-top: 15px;
+           border-top: 1px solid #e2e8f0;
+       }
+       
+       .show-data-btn {
+           background-color: #e2e8f0;
+           color: #64748b;
+           border: none;
+           padding: 8px 12px;
+           border-radius: 4px;
+           cursor: pointer;
+           font-weight: bold;
+           font-size: 12px;
+           text-align: left;
+       }
+       
+       .show-data-btn:hover {
+           background-color: #cbd5e1;
+       }
+       
+       .station-data-container {
+           margin-top: 20px;
+           padding-top: 15px;
+           display: none;
+       }
+       
+       .station-data-table {
+           width: 100%;
+           border-collapse: collapse;
+           font-size: 12px;
+       }
+       
+       .station-data-table th, 
+       .station-data-table td {
+           padding: 6px 8px;
+           border: 1px solid #e2e8f0;
+           text-align: left;
+       }
+       
+       .station-data-table th {
+           background-color: #f1f5f9;
+           font-weight: bold;
+       }
+       
+       .station-data-table tr:nth-child(even) {
+           background-color: #f8fafc;
+       }
+       
+       .alert {
+           padding: 12px;
+           border-radius: 4px;
+           margin-bottom: 20px;
+       }
+       .alert-warning {
+           background-color: #fef3c7;
+           border: 1px solid #f59e0b;
+           color: #92400e;
+       }
+       .alert-info {
+           background-color: #e0f2fe;
+           border: 1px solid #38bdf8;
+           color: #0c4a6e;
+       }
+       .alert-success {
+           background-color: #dcfce7;
+           border: 1px solid #10b981;
+           color: #065f46;
+       }
+       .loading-overlay {
+           position: fixed;
+           top: 0;
+           left: 0;
+           right: 0;
+           bottom: 0;
+           background-color: rgba(255, 255, 255, 0.8);
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           z-index: 9999;
+       }
+       .loading-spinner {
+           width: 50px;
+           height: 50px;
+           border: 5px solid #f3f3f3;
+           border-top: 5px solid #2563eb;
+           border-radius: 50%;
+           animation: spin 1s linear infinite;
+       }
+       .loading-content {
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           justify-content: center;
+           background-color: rgba(255, 255, 255, 0.9);
+           padding: 20px 30px;
+           border-radius: 8px;
+           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+       }
+       .loading-countdown {
+           font-size: 24px;
+           font-weight: bold;
+           color: #2563eb;
+           margin: 10px 0;
+       }
+       .loading-message {
+           color: #1e293b;
+           font-size: 16px;
+       }
+       @keyframes spin {
+           0% { transform: rotate(0deg); }
+           100% { transform: rotate(360deg); }
+       }
+       .tooltip {
+           position: absolute;
+           background-color: #334155;
+           color: white;
+           padding: 5px 10px;
+           border-radius: 4px;
+           font-size: 12px;
+           z-index: 1000;
+           pointer-events: none;
+           white-space: nowrap;
+       }
+       .tooltip::after {
+           content: '';
+           position: absolute;
+           top: 100%;
+           left: 50%;
+           margin-left: -5px;
+           border-width: 5px;
+           border-style: solid;
+           border-color: #334155 transparent transparent transparent;
+       }
+       .zoom-controls {
+           position: absolute;
+           bottom: 20px;
+           right: 20px;
+           display: flex;
+           flex-direction: column;
+           gap: 5px;
+           z-index: 50;
+       }
+       .zoom-btn {
+           width: 40px;
+           height: 40px;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           background-color: white;
+           border: 1px solid #cbd5e1;
+           border-radius: 4px;
+           font-size: 20px;
+           cursor: pointer;
+           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+       }
+       .zoom-btn:hover {
+           background-color: #f8fafc;
+       }
+       .zoom-level {
+           text-align: center;
+           font-size: 12px;
+           color: #64748b;
+           margin-top: 5px;
+       }
+       .station-list {
+           list-style-type: none;
+           padding: 0;
+           margin: 10px 0;
+       }
+       .station-list li {
+           padding: 4px 0;
+       }
+       .region-summary {
+           margin-bottom: 10px;
+           padding: 5px 0;
+           display: flex;
+           flex-wrap: wrap;
+           gap: 10px;
+       }
+       .region-summary-item {
+           background-color: #f1f5f9;
+           padding: 5px 10px;
+           border-radius: 4px;
+           font-size: 14px;
+       }
+       .instructions {
+           line-height: 1.6;
+           margin-bottom: 20px;
+       }
+       .instructions h2 {
+           margin-top: 0;
+           font-size: 20px;
+       }
+       .choose-region-message {
+           font-size: 18px;
+           font-weight: bold;
+           text-align: center;
+           margin: 10px 0 20px;
+           color: #1e293b;
+       }
+       .coordinates-display {
+           position: absolute;
+           bottom: 20px;
+           left: 20px;
+           background-color: rgba(255, 255, 255, 0.8);
+           padding: 5px 10px;
+           border-radius: 4px;
+           font-size: 12px;
+           color: #1e293b;
+           z-index: 50;
+           pointer-events: none;
+       }
+       .notification-popup {
+           position: fixed;
+           top: 50%;
+           left: 50%;
+           transform: translate(-50%, -50%);
+           background-color: #10b981;
+           color: white;
+           padding: 12px 20px;
+           border-radius: 6px;
+           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+           z-index: 1000;
+           font-weight: bold;
+           opacity: 0;
+           transition: opacity 0.3s ease;
+       }
+       .notification-popup.show {
+           opacity: 1;
+       }
+   </style>
+</head>
+<body>
+   <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+       <div class="loading-spinner"></div>
+   </div>
+   
+   <div id="regionLoadingOverlay" class="loading-overlay" style="display: none;">
+       <div class="loading-content">
+           <div class="loading-spinner"></div>
+           <div id="loadingCountdown" class="loading-countdown">5</div>
+           <div class="loading-message">Loading region, please wait...</div>
+       </div>
+   </div>
+   
+   <header>
+       <div class="header-content">
+           <!-- Title Section -->
+           <div class="title-section">
+               <h1>AV Unit Quiz</h1>
+               <div id="overallProgress" class="overall-progress">Total: 0/0 (0%)</div>
+           </div>
+           
+           <!-- Region Buttons Section -->
+<div class="region-section">
+              <div id="regionButtonsContainer" class="region-buttons">
+                  <!-- Region buttons will be dynamically populated -->
+              </div>
+          </div>
+          
+          <!-- Controls Section -->
+          <div class="controls-section">
+              <label class="file-input-label" id="fileInputLabel">
+                  <input type="file" id="csvFileInput" class="file-input" accept=".csv">
+                  <div class="progress-btn-top">Load</div>
+                  <div class="progress-btn-bottom">CSV</div>
+              </label>
+              
+              <div class="header-divider"></div>
+              
+              <button class="progress-btn" id="saveProgressBtn">
+                  <div class="progress-btn-top">Save</div>
+                  <div class="progress-btn-bottom">Progress</div>
+              </button>
+              <button class="progress-btn" id="loadProgressBtn">
+                  <div class="progress-btn-top">Load</div>
+                  <div class="progress-btn-bottom">Progress</div>
+              </button>
+              
+              <div class="header-divider"></div>
+              
+              <div class="toggle-feedback-stack">
+                  <div class="toggle-container">
+                      <label class="toggle-switch">
+                          <input type="checkbox" id="gridToggle">
+                          <span class="toggle-slider"></span>
+                      </label>
+                      <span class="toggle-label">Show Grid</span>
+                  </div>
+                  <a href="mailto:david.cunneen@ambulance.vic.gov.au?subject=AV%20Unit%20Quiz%20Feedback" class="feedback-btn-short">
+                      Feedback
+                  </a>
+              </div>
+          </div>
+      </div>
+  </header>
+  
+  <div class="main-container" id="mainContainer">
+      <div class="map-container" id="mapContainer">
+          <div class="map-inner-container" id="mapInnerContainer">
+              <div class="map-content" id="mapContent">
+                  <!-- Map image will be dynamically loaded -->
+              </div>
+          </div>
+          
+          <!-- Coordinates display -->
+          <div class="coordinates-display" id="coordinatesDisplay"></div>
+          
+          <!-- Zoom controls -->
+          <div class="zoom-controls">
+              <button class="zoom-btn" id="zoomInBtn">+</button>
+              <button class="zoom-btn" id="zoomOutBtn">-</button>
+              <button class="zoom-btn" id="resetZoomBtn">⌂</button>
+              <div class="zoom-level" id="zoomLevel">100%</div>
+          </div>
+      </div>
+      
+      <!-- Form container (right side panel) -->
+ <div id="formContainer" class="form-container">
+    <div class="instructions">
+        <h2>Welcome to the AV Unit Quiz</h2>
+        
+        <div class="drag-drop-area" id="dragDropArea">
+            <div class="drag-drop-text">📁 Drag and drop your CSV file here</div>
+            <div class="drag-drop-subtext">or click "Load CSV" button above to browse</div>
+        </div>
+        
+        <p>The quiz will test your knowledge of unit callsigns, names, types and shifts across different regions.</p>
+        
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
+        
+        <h3>Getting Started</h3>
+        <ol>
+            <li><strong>Load your CSV file:</strong> Either drag and drop the CSV file into the area above, or click the "Load CSV" button</li>
+            <li><strong>Select a region:</strong> After loading the data, choose your region from the buttons that appear</li>
+            <li><strong>Begin the quiz:</strong> Click on any station pin to start answering questions for that station</li>
+        </ol>
+        
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
+        
+        <h3>Customizing Quiz Data</h3>
+        <p>The quiz information can be customized by editing the CSV file in Excel:</p>
+        <ul>
+            <li><strong>Adding or editing units:</strong> Modify the callsign, unit name, type, and shift columns in the CSV file</li>
+            <li><strong>Moving or adding stations:</strong> Use the "Show Grid" toggle to view grid coordinates, then update the Grid H and Grid V columns in the CSV to position stations at the desired location within each region</li>
+            <li><strong>Station label positioning:</strong> Use the "Label" column to specify where station labels appear (above, below, left, right). Only one row per station needs this value - others can be blank</li>
+            <li><strong>Regions:</strong> Ensure each entry has the correct Region value to appear in the appropriate regional map</li>
+            <li><strong>Row order:</strong> Data can be entered in any row order within the CSV - the quiz will automatically organize units by their station and region regardless of their position in the file</li>
+        </ul>
+        <p>After making changes, save the CSV file and reload it using drag and drop or the "Load CSV" button to see your updates in the quiz.</p>
+    </div>
+</div>
+  </div>
+  
+  <script>
+      // Text display settings
+      const SHOW_TEXT_ZOOM_THRESHOLD = 2.5; // 250%
+      const FIXED_FONT_SIZE = 1.5; // 1.5px when text is shown
+      
+      // Region-specific grid configuration
+      const REGION_GRID_CONFIG = {
+          "BSW": { rows: 150, cols: 200 },
+          "GRA": { rows: 200, cols: 200 },
+          "LOD": { rows: 250, cols: 200 },
+          "HUM": { rows: 150, cols: 180 },
+          "GIP": { rows: 120, cols: 200 },
+          "METRO-WEST": { rows: 300, cols: 300 },
+          "METRO-EAST": { rows: 300, cols: 300 }
+      };
+      
+      // Available regions
+      const REGIONS = ["BSW", "GRA", "LOD", "HUM", "GIP", "METRO-WEST", "METRO-EAST"];
+      
+      // Data storage
+      let allData = [];
+      let regionData = {};
+      let regionUnitTypes = {}; // Store unit types per region
+      let regionShiftTypes = {}; // Store shift types per region
+      let currentRegionStations = [];
+      let activeRegion = null;
+      
+      // Station progress tracking
+      let stationProgress = {};
+      let currentStation = null;
+      
+      // Map and zoom variables
+      let currentScale = 1;
+      let currentTranslate = { x: 0, y: 0 };
+      let isDragging = false;
+      let lastMousePos = { x: 0, y: 0 };
+      
+      // Hint system
+      let activeHintField = null;
+      
+      // DOM elements
+      const mainContainer = document.getElementById('mainContainer');
+      const mapContainer = document.getElementById('mapContainer');
+      const mapContent = document.getElementById('mapContent');
+      const regionButtonsContainer = document.getElementById('regionButtonsContainer');
+      const formContainer = document.getElementById('formContainer');
+      const gridToggle = document.getElementById('gridToggle');
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      const regionLoadingOverlay = document.getElementById('regionLoadingOverlay');
+      const loadingCountdown = document.getElementById('loadingCountdown');
+      const csvFileInput = document.getElementById('csvFileInput');
+      const fileInputLabel = document.getElementById('fileInputLabel');
+      const mapInnerContainer = document.getElementById('mapInnerContainer');
+      const zoomInBtn = document.getElementById('zoomInBtn');
+      const zoomOutBtn = document.getElementById('zoomOutBtn');
+      const resetZoomBtn = document.getElementById('resetZoomBtn');
+      const zoomLevel = document.getElementById('zoomLevel');
+      const coordinatesDisplay = document.getElementById('coordinatesDisplay');
+      const overallProgress = document.getElementById('overallProgress');
+      const saveProgressBtn = document.getElementById('saveProgressBtn');
+      const loadProgressBtn = document.getElementById('loadProgressBtn');
+      
+      // Initialize the application
+      window.addEventListener('DOMContentLoaded', init);
+      
+function init() {
+    // Set up event listeners
+    gridToggle.addEventListener('change', toggleGridLines);
+    fileInputLabel.addEventListener('click', handleFileInputClick);
+    csvFileInput.addEventListener('change', handleFileSelect);
+    csvFileInput.addEventListener('click', function(e) {
+        e.stopPropagation(); // Prevent the label click from firing
+    });
+    saveProgressBtn.addEventListener('click', saveProgress);
+    loadProgressBtn.addEventListener('click', loadProgress);
+          // Set up zoom
+          setupZoom();
+          
+          // Set up drag functionality
+          setupDragAndDrop();   
+		  
+          // Set up Map drag functionality
+          setupMapDragAndDrop();
+          
+          // Set up region buttons (initially disabled)
+          setupRegionButtons();
+         
+          // Add window resize event listener for map stability
+          window.addEventListener('resize', handleWindowResize);
+      }
+// Set up drag and drop functionality for CSV files
+function setupDragAndDrop() {
+    const dragDropArea = document.getElementById('dragDropArea');
+    
+    // Only set up if the drag drop area exists (on initial load)
+    if (!dragDropArea) return;
+    
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dragDropArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    // Highlight drop area when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dragDropArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dragDropArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    // Handle dropped files
+    dragDropArea.addEventListener('drop', handleDrop, false);
+    
+    // Also make the area clickable to trigger file browser
+    dragDropArea.addEventListener('click', () => {
+        csvFileInput.click();
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    function highlight(e) {
+        dragDropArea.classList.add('drag-over');
+    }
+    
+    function unhighlight(e) {
+        dragDropArea.classList.remove('drag-over');
+    }
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            const file = files[0];
+            
+            // Check if it's a CSV file
+            if (file.type === 'text/csv' || file.name.toLowerCase().endsWith('.csv')) {
+                // Check for existing progress before processing
+                handleFileInputClick(e, () => {
+                    // Process the dropped file
+                    processDroppedFile(file);
+                });
+            } else {
+                alert('Please drop a CSV file. The file you dropped is not a valid CSV file.');
+            }
+        }
+    }
+    
+    function processDroppedFile(file) {
+        // Simulate the file input change event
+        const fileList = new DataTransfer();
+        fileList.items.add(file);
+        csvFileInput.files = fileList.files;
+        
+        // Trigger the file processing
+        handleFileSelect({ target: { files: [file] } });
+    }
+}      
+      // Check if there's existing progress
+      function hasExistingProgress() {
+          return Object.keys(stationProgress).some(region => 
+              Object.keys(stationProgress[region] || {}).some(station =>
+                  Object.keys(stationProgress[region][station].correctEntries || {}).length > 0 ||
+                  Object.keys(stationProgress[region][station].formValues || {}).length > 0
+              )
+          );
+      }
+      
+// Handle file input label click with progress checking
+function handleFileInputClick(event, callback) {
+    event.preventDefault();
+    
+    const hasData = allData.length > 0;
+    const hasProgress = hasExistingProgress();
+    
+    if (hasData || hasProgress) {
+        let message = 'Loading a new CSV file will replace all current data';
+        if (hasProgress) {
+            message += ' and all quiz progress will be lost';
+        }
+        message += '. Do you want to continue?';
+        
+        if (confirm(message)) {
+            csvFileInput.value = '';
+            if (callback) {
+                callback();
+            } else {
+                csvFileInput.click();
+            }
+        }
+    } else {
+        if (callback) {
+            callback();
+        } else {
+            csvFileInput.click();
+        }
+    }
+}
+      
+      // Simple window resize solution - reload current region
+      function handleWindowResize() {
+          clearTimeout(window.resizeTimeout);
+          window.resizeTimeout = setTimeout(() => {
+              if (activeRegion) {
+                  // Save current station progress before reload
+                  if (currentStation) {
+                      saveStationProgress(currentStation);
+                  }
+                  
+                  // Simply reload the current region
+                  loadRegion(activeRegion);
+              }
+          }, 50); // Wait 500ms after resize stops to avoid excessive reloads
+      }
+      
+      // Show notification popup
+      function showNotification(message, type = 'success') {
+          const notification = document.createElement('div');
+          notification.className = 'notification-popup';
+          notification.textContent = message;
+          
+          // Set background color based on type
+          if (type === 'success') {
+              notification.style.backgroundColor = '#10b981'; // green
+          } else if (type === 'error') {
+              notification.style.backgroundColor = '#ef4444'; // red
+          }
+          
+          document.body.appendChild(notification);
+          
+          // Show notification
+          setTimeout(() => {
+              notification.classList.add('show');
+          }, 10);
+          
+          // Hide and remove notification after 3 seconds
+          setTimeout(() => {
+              notification.classList.remove('show');
+              setTimeout(() => {
+                  document.body.removeChild(notification);
+              }, 300);
+          }, 3000);
+      }
+      
+      // Save progress to JSON file
+      function saveProgress() {
+          const progressData = {
+              version: "1.0",
+              timestamp: new Date().toISOString(),
+              stationProgress: stationProgress,
+              metadata: {
+                  totalRegions: Object.keys(regionData).length,
+                  totalUnits: Object.values(regionData).flat().length
+              }
+          };
+          
+          // Create JSON blob
+          const jsonString = JSON.stringify(progressData, null, 2);
+          const blob = new Blob([jsonString], { type: 'application/json' });
+          
+          // Create download link
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          
+          // Generate filename with date and timestamp
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          const day = String(now.getDate()).padStart(2, '0');
+          const hours = String(now.getHours()).padStart(2, '0');
+          const minutes = String(now.getMinutes()).padStart(2, '0');
+          const seconds = String(now.getSeconds()).padStart(2, '0');
+          const timestamp = `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
+          a.download = `av-unit-quiz-progress-${timestamp}.json`;
+          
+          // Trigger download
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          
+          // Clean up
+          URL.revokeObjectURL(url);
+          
+          // Show success notification
+          showNotification('Progress saved successfully!');
+      }
+      
+      // Load progress from JSON file with reconciliation for CSV changes
+      function loadProgress() {
+          // If no CSV data has been loaded yet, alert user
+          if (allData.length === 0) {
+              showNotification('Please load a CSV file first before loading progress.', 'error');
+              return;
+          }
+          
+          // Check if there's existing progress that would be overwritten
+          const hasExistingProgressData = hasExistingProgress();
+          
+          if (hasExistingProgressData) {
+              const confirmLoad = confirm(
+                  'Loading progress from a file will replace your current progress. Do you want to continue?'
+              );
+              if (!confirmLoad) {
+                  return;
+              }
+          }
+          
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          fileInput.accept = '.json';
+          
+          fileInput.addEventListener('change', function(event) {
+              const file = event.target.files[0];
+              if (!file) return;
+              
+              const reader = new FileReader();
+              reader.onload = function(e) {
+                  try {
+                      const progressData = JSON.parse(e.target.result);
+                      
+                      // Validate the data structure
+                      if (!progressData.stationProgress || typeof progressData.stationProgress !== 'object') {
+                          throw new Error('Invalid progress file format');
+                      }
+                      
+                      // Stats for reconciliation summary
+                      let ignoredStations = 0;
+                      let ignoredUnits = 0;
+                      let ignoredFields = 0;
+                      let importedStations = 0;
+                      let importedUnits = 0;
+                      let relocatedStations = 0;
+                      
+                      // Create a new station progress object for reconciled data
+                      const reconciledProgress = {};
+                      
+                      // Process each region in the loaded progress
+                      for (const region in progressData.stationProgress) {
+                          // Skip regions not in current CSV
+                          if (!regionData[region]) {
+                              ignoredStations += Object.keys(progressData.stationProgress[region] || {}).length;
+                              continue;
+                          }
+                          
+                          // Initialize region in reconciled progress if it doesn't exist
+                          if (!reconciledProgress[region]) {
+                              reconciledProgress[region] = {};
+                          }
+                          
+                          // Build lookup tables for the current CSV data
+                          const currentStationsByKey = new Map(); // Map of station keys to station objects
+                          const currentStationsByName = new Map(); // Map of station names to station objects
+                          const currentUnitsByCallsign = new Map(); // Map of callsigns to unit entries
+                          
+                          // Populate the lookup tables from current CSV data
+                          if (regionData[region]) {
+                              regionData[region].forEach(unit => {
+                                  const stationKey = `${unit["Grid H"]}${unit["Grid V"]}-${unit["Station Name"]}`;
+                                  const stationName = unit["Station Name"].toLowerCase().trim();
+                                  
+                                  // Add station to key lookup
+                                  if (!currentStationsByKey.has(stationKey)) {
+                                      const stationObj = {
+                                          gridReference: `${unit["Grid H"]}${unit["Grid V"]}`,
+                                          stationName: unit["Station Name"],
+                                          entries: []
+                                      };
+                                      currentStationsByKey.set(stationKey, stationObj);
+                                      
+                                      // Also add to name lookup
+                                      currentStationsByName.set(stationName, stationObj);
+                                  }
+                                  
+                                  // Add unit to station entries
+                                  currentStationsByKey.get(stationKey).entries.push(unit);
+                                  
+                                  // Add unit to callsign lookup (if it has a callsign)
+                                  if (unit["Unit Callsign"] && unit["Unit Callsign"].trim() !== '') {
+                                      currentUnitsByCallsign.set(unit["Unit Callsign"].toLowerCase(), unit);
+                                  }
+                              });
+                          }
+                          
+                          // Process each station in the loaded progress for this region
+                          for (const stationKey in progressData.stationProgress[region]) {
+                              const stationProgressData = progressData.stationProgress[region][stationKey];
+                              
+                              // Extract station name from the key (format is "gridref-stationname")
+                              const savedStationName = stationKey.split('-').slice(1).join('-').toLowerCase().trim();
+                              
+                              // Try to find the station by exact key first
+                              let currentStation = currentStationsByKey.get(stationKey);
+                              let newStationKey = stationKey;
+                              let relocated = false;
+                              
+                              // If not found by key, try to find by name (for relocated stations)
+                              if (!currentStation && savedStationName) {
+                                  currentStation = currentStationsByName.get(savedStationName);
+                                  
+                                  if (currentStation) {
+                                      // Station found by name but at a different grid reference
+                                      relocated = true;
+                                      relocatedStations++;
+                                      
+                                      // Use the new station key for the reconciled progress
+                                      newStationKey = `${currentStation.gridReference}-${currentStation.stationName}`;
+                                  }
+                              }
+                              
+                              // Skip stations not found in current CSV
+                              if (!currentStation) {
+                                  ignoredStations++;
+                                  continue;
+                              }
+                              
+                              importedStations++;
+                              
+                              // Initialize this station in reconciled progress
+                              reconciledProgress[region][newStationKey] = {
+                                  percentage: 0, // Will recalculate after reconciliation
+                                  correctEntries: {},
+                                  formValues: {}
+                              };
+                              
+                              // Process correct entries (units that were fully correct)
+                              for (const entryIndex in stationProgressData.correctEntries) {
+                                  // Check if this index is still valid for the station
+                                  if (parseInt(entryIndex) < currentStation.entries.length) {
+                                      reconciledProgress[region][newStationKey].correctEntries[entryIndex] = true;
+                                      importedUnits++;
+                                  } else {
+                                      ignoredUnits++;
+                                  }
+                              }
+                              
+                              // Process saved form values with validation
+                              for (const fieldKey in stationProgressData.formValues) {
+                                  const [rowIndex, fieldName] = fieldKey.split('-');
+                                  const value = stationProgressData.formValues[fieldKey];
+                                  
+                                  // Skip if row index is out of bounds
+                                  if (parseInt(rowIndex) >= currentStation.entries.length) {
+                                      ignoredFields++;
+                                      continue;
+                                  }
+                                  
+                                  // Map field names to CSV columns
+                                  const fieldMapping = {
+                                      'callsign': 'Unit Callsign',
+                                      'unitName': 'Unit Name',
+                                      'unitType': 'Unit Type',
+                                      'shiftType': 'Shift Type'
+                                  };
+                                  
+                                  // Get current unit for this row
+                                  const currentUnit = currentStation.entries[parseInt(rowIndex)];
+                                  
+                                  // Special case for callsign - check if it exists in current CSV for this region
+                                  if (fieldName === 'callsign' && value) {
+                                      const lowercaseCallsign = value.toLowerCase();
+                                      if (currentUnitsByCallsign.has(lowercaseCallsign)) {
+                                          reconciledProgress[region][newStationKey].formValues[fieldKey] = value;
+                                      } else {
+                                          ignoredFields++;
+                                          continue;
+                                      }
+                                  } 
+                                  // For dropdown fields (unitType and shiftType), validate against available options
+                                  else if (fieldName === 'unitType' && value) {
+                                      if (regionUnitTypes[region] && regionUnitTypes[region].includes(value)) {
+                                          reconciledProgress[region][newStationKey].formValues[fieldKey] = value;
+                                      } else {
+                                          ignoredFields++;
+                                          continue;
+                                      }
+                                  } 
+                                  else if (fieldName === 'shiftType' && value) {
+                                      if (regionShiftTypes[region] && regionShiftTypes[region].includes(value)) {
+                                          reconciledProgress[region][newStationKey].formValues[fieldKey] = value;
+                                      } else {
+                                          ignoredFields++;
+                                          continue;
+                                      }
+                                  }
+                                  // For unit name, just keep as is
+                                  else if (fieldName === 'unitName') {
+                                      reconciledProgress[region][newStationKey].formValues[fieldKey] = value;
+                                  }
+                              }
+                              
+                              // Recalculate station percentage based on current entries
+                              const totalEntries = currentStation.entries.length;
+                              const correctEntries = Object.keys(reconciledProgress[region][newStationKey].correctEntries).length;
+                              const percentage = (correctEntries / totalEntries) * 100;
+                              reconciledProgress[region][newStationKey].percentage = percentage;
+                          }
+                      }
+                      
+                      // Replace the station progress with the reconciled version
+                      stationProgress = reconciledProgress;
+                      
+                      // Update the UI
+                      updateRegionButtonsProgress();
+                      
+                      // If there's a current station, refresh the form
+                      if (currentStation && activeRegion) {
+                          const station = currentRegionStations.find(s => `${s.gridReference}-${s.stationName}` === currentStation);
+                          if (station) {
+                              showStationForm(station, currentStation);
+                          }
+                      }
+                      
+                      // Update station pins
+                      updateAllStationPins();
+                      
+                      // Show a detailed reconciliation summary
+                      let summaryMessage = `Progress loaded successfully! `;
+                      summaryMessage += `Imported ${importedStations} stations with ${importedUnits} correct units. `;
+                      
+                      if (relocatedStations > 0) {
+                          summaryMessage += `Found ${relocatedStations} stations that moved to new grid positions. `;
+                      }
+                      
+                      if (ignoredStations > 0 || ignoredUnits > 0 || ignoredFields > 0) {
+                          summaryMessage += `Ignored ${ignoredStations} stations, ${ignoredUnits} units, and ${ignoredFields} field values that don't match current CSV.`;
+                      }
+                      
+                      showNotification(summaryMessage);
+                      
+                  } catch (error) {
+                      console.error('Error loading progress:', error);
+                      showNotification('Error loading progress file. Please check the file format.', 'error');
+                  }
+              };
+              reader.readAsText(file);
+          });
+          
+          // Trigger file selection
+          fileInput.click();
+      }
+      
+      // Reset current station
+      function resetStation() {
+          if (!currentStation || !activeRegion) return;
+          
+          // Clear form inputs
+          const allInputs = formContainer.querySelectorAll('.form-input');
+          allInputs.forEach(input => {
+              input.value = '';
+              input.classList.remove('correct', 'incorrect', 'hint-active', 'auto-correct');
+              input.disabled = false;
+          });
+          
+          // Clear station progress
+          stationProgress[activeRegion][currentStation] = {
+              percentage: 0,
+              correctEntries: {},
+              formValues: {}
+          };
+          
+          // Update station pin
+          updateStationProgress(currentStation);
+          
+          showNotification('Station reset successfully!');
+      }
+      
+      // Reset entire region
+      function resetRegion() {
+          if (!activeRegion) return;
+          
+          // Show confirmation dialog
+          if (confirm(`Are you sure you want to clear all progress for the ${activeRegion} region? This action cannot be undone.`)) {
+              // Clear all station progress for this region
+              stationProgress[activeRegion] = {};
+              
+              // Initialize empty progress for all stations
+              currentRegionStations.forEach(station => {
+                  const stationKey = `${station.gridReference}-${station.stationName}`;
+                  stationProgress[activeRegion][stationKey] = {
+                      percentage: 0,
+                      correctEntries: {},
+                      formValues: {}
+                  };
+              });
+              
+              // Update all station pins
+              updateAllStationPins();
+              
+              // Update region buttons
+              updateRegionButtonsProgress();
+              
+              // If there's a current station form, clear it
+              if (currentStation) {
+                  const allInputs = formContainer.querySelectorAll('.form-input');
+                  allInputs.forEach(input => {
+                      input.value = '';
+                      input.classList.remove('correct', 'incorrect', 'hint-active', 'auto-correct');
+                      input.disabled = false;
+                  });
+              }
+              
+              showNotification(`${activeRegion} region reset successfully!`);
+          }
+      }
+      
+      // Update all station pins with current progress
+      function updateAllStationPins() {
+          if (!activeRegion) return;
+          
+          document.querySelectorAll('.station-pin').forEach(pin => {
+              const stationKey = pin.dataset.key;
+              if (stationProgress[activeRegion] && stationProgress[activeRegion][stationKey]) {
+                  const progressCircle = pin.querySelector('.progress-circle');
+                  updateCirclePercentage(progressCircle, stationProgress[activeRegion][stationKey].percentage);
+              }
+          });
+      }
+      
+      // Set up pan and drag functionality
+      function setupMapDragAndDrop() {
+          // Mouse events for dragging
+          mapInnerContainer.addEventListener('mousedown', function(e) {
+              // Only enable dragging with left mouse button
+              if (e.button !== 0) return;
+              
+              // Prevent default behavior that might cause issues
+              e.preventDefault();
+              
+              // Start dragging
+              isDragging = true;
+              lastMousePos = { x: e.clientX, y: e.clientY };
+              mapInnerContainer.classList.add('grabbing');
+          });
+          
+          document.addEventListener('mousemove', function(e) {
+              if (isDragging) {
+                  // Calculate how much the mouse has moved
+                  const deltaX = e.clientX - lastMousePos.x;
+                  const deltaY = e.clientY - lastMousePos.y;
+                  
+                  // Update the last mouse position
+                  lastMousePos = { x: e.clientX, y: e.clientY };
+                  
+                  // Update the map position
+                  currentTranslate.x += deltaX;
+                  currentTranslate.y += deltaY;
+                  
+                  // Apply the new position
+                  updateMapTransform();
+              }
+              
+              // Handle grid coordinate tracking on mousemove
+              if (!isDragging && gridToggle.checked) {
+                  updateGridCoordinateDisplay(e);
+              }
+          });
+          
+          document.addEventListener('mouseup', function() {
+              if (isDragging) {
+                  isDragging = false;
+                  mapInnerContainer.classList.remove('grabbing');
+              }
+          });
+          
+          // Prevent default drag behavior on the map image
+          mapInnerContainer.addEventListener('dragstart', function(e) {
+              e.preventDefault();
+              return false;
+          });
+          
+          // Grid coordinate tracking when grid is toggled
+          mapInnerContainer.addEventListener('mousemove', function(e) {
+              if (gridToggle.checked) {
+                  updateGridCoordinateDisplay(e);
+              }
+          });
+          
+          // Clear coordinate display when mouse leaves the map
+          mapInnerContainer.addEventListener('mouseleave', function() {
+              coordinatesDisplay.textContent = '';
+              clearGridCellHighlight();
+          });
+      }
+      
+      // Update grid coordinate display
+      function updateGridCoordinateDisplay(e) {
+          const rect = mapInnerContainer.getBoundingClientRect();
+          
+          // Get mouse position relative to the container
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
+          
+          // Convert to position in the original scale 
+          const contentX = (mouseX - currentTranslate.x) / currentScale;
+          const contentY = (mouseY - currentTranslate.y) / currentScale;
+          
+          // Get grid dimensions for current region
+          const gridConfig = REGION_GRID_CONFIG[activeRegion] || { rows: 120, cols: 120 };
+          
+          // Calculate grid cell
+          const cellX = Math.floor((contentX / mapContent.offsetWidth) * gridConfig.cols);
+          const cellY = Math.floor((contentY / mapContent.offsetHeight) * gridConfig.rows);
+          
+          // Ensure we're within grid bounds
+          if (cellX >= 0 && cellX < gridConfig.cols && cellY >= 0 && cellY < gridConfig.rows) {
+              // Convert to grid reference (e.g. A1, B2)
+              let colName = "";
+              if (cellX < 26) {
+                  colName = String.fromCharCode(65 + cellX);
+              } else {
+                  colName = String.fromCharCode(65 + Math.floor(cellX / 26) - 1) + 
+                           String.fromCharCode(65 + (cellX % 26));
+              }
+              
+              const gridRef = colName + (cellY + 1);
+              coordinatesDisplay.textContent = gridRef;
+              
+              // Highlight the corresponding grid cell
+              updateGridCellHighlight(cellX, cellY);
+          } else {
+              coordinatesDisplay.textContent = '';
+              clearGridCellHighlight();
+          }
+      }
+      
+      // Update grid cell highlight
+      function updateGridCellHighlight(cellX, cellY) {
+          // Clear previous highlights
+          clearGridCellHighlight();
+          
+          // Find the grid cell at these coordinates
+          const gridCell = document.querySelector(`.grid-cell[data-col="${cellX}"][data-row="${cellY}"]`);
+          if (gridCell) {
+              gridCell.classList.add('hover');
+          }
+      }
+      
+      // Clear all grid cell highlights
+      function clearGridCellHighlight() {
+          document.querySelectorAll('.grid-cell.hover').forEach(cell => {
+              cell.classList.remove('hover');
+          });
+      }
+      
+      // Set up region buttons
+      function setupRegionButtons() {
+          regionButtonsContainer.innerHTML = '';
+          
+          REGIONS.forEach(region => {
+              const button = document.createElement('button');
+              button.className = 'region-btn disabled';
+              button.dataset.region = region;
+              button.disabled = true;
+              
+              // Create two-line layout for region button
+              const regionName = document.createElement('div');
+              regionName.className = 'region-name';
+              regionName.textContent = region;
+              
+              const regionProgress = document.createElement('div');
+              regionProgress.className = 'region-progress';
+              regionProgress.textContent = '0/0 (0%)';
+              
+button.appendChild(regionName);
+              button.appendChild(regionProgress);
+              
+              button.addEventListener('click', () => {
+                  if (button.classList.contains('disabled')) return;
+                  
+                  // Save current form state if applicable
+                  if (currentStation && activeRegion) {
+                      saveStationProgress(currentStation);
+                  }
+                  
+                  // Deactivate all region buttons
+                  document.querySelectorAll('.region-btn').forEach(btn => {
+                      btn.classList.remove('active');
+                  });
+                  
+                  // Activate this button
+                  button.classList.add('active');
+                  
+                  // Load the region
+                  loadRegion(region);
+              });
+              
+              regionButtonsContainer.appendChild(button);
+          });
+      }
+      
+      // Set up zoom functionality
+      function setupZoom() {
+          // Mouse wheel zoom
+          mapInnerContainer.addEventListener('wheel', handleZoom);
+          
+          // Zoom buttons
+          zoomInBtn.addEventListener('click', () => {
+              // Zoom toward center of map
+              const rect = mapInnerContainer.getBoundingClientRect();
+              const x = rect.width / 2;
+              const y = rect.height / 2;
+              zoomAtPoint(x, y, 0.5);
+          });
+          
+          zoomOutBtn.addEventListener('click', () => {
+              // Zoom toward center of map
+              const rect = mapInnerContainer.getBoundingClientRect();
+              const x = rect.width / 2;
+              const y = rect.height / 2;
+              zoomAtPoint(x, y, -0.5);
+          });
+          
+          resetZoomBtn.addEventListener('click', resetZoom);
+      }
+      
+      // Handle zoom with mouse wheel
+      function handleZoom(e) {
+          e.preventDefault();
+          
+          // Get pointer position relative to map
+          const rect = mapInnerContainer.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          // Determine zoom direction with increased increment
+          const delta = -Math.sign(e.deltaY) * 0.8;
+          
+          // Apply zoom
+          zoomAtPoint(x, y, delta);
+      }
+      
+      // Zoom at a specific point with increased max zoom
+      function zoomAtPoint(x, y, delta) {
+          const oldScale = currentScale;
+          currentScale = Math.max(0.5, Math.min(15, currentScale + delta));
+          
+          // Adjust translation to zoom at pointer position
+          if (oldScale !== currentScale) {
+              const scaleRatio = currentScale / oldScale;
+              
+              // Calculate the point position in the scaled content
+              const pointXInContent = (x - currentTranslate.x) / oldScale;
+              const pointYInContent = (y - currentTranslate.y) / oldScale;
+              
+              // Calculate the new translation
+              currentTranslate.x = x - pointXInContent * currentScale;
+              currentTranslate.y = y - pointYInContent * currentScale;
+              
+              // Update the transform
+              updateMapTransform();
+              
+              // Update zoom level display
+              zoomLevel.textContent = `${Math.round(currentScale * 100)}%`;
+          }
+      }
+      
+      // Reset zoom and position
+      function resetZoom() {
+          currentScale = 1;
+          currentTranslate = { x: 0, y: 0 };
+          updateMapTransform();
+          zoomLevel.textContent = '100%';
+      }
+      
+      // Update map transform with responsive text scaling
+      function updateMapTransform() {
+          mapContent.style.transform = `translate(${currentTranslate.x}px, ${currentTranslate.y}px) scale(${currentScale})`;
+          
+          // Update station text scaling
+          updateStationTextScaling();
+      }
+      
+      // Update station text scaling based on zoom level
+      function updateStationTextScaling() {
+          // Simple show/hide logic for percentage text in station circles
+          document.querySelectorAll('.progress-circle').forEach(circle => {
+              if (currentScale > SHOW_TEXT_ZOOM_THRESHOLD) {
+                  // Show text with fixed font size when zoomed in past threshold
+                  // Check if in Metro region for special font size handling
+                  if (mapContainer.classList.contains('metro-region')) {
+                      circle.style.fontSize = '1.0px';
+                  } else {
+                      circle.style.fontSize = `${FIXED_FONT_SIZE}px`;
+                  }
+              } else {
+                  // Hide text when zoomed out
+                  circle.style.fontSize = '0px';
+              }
+          });
+          
+          // Keep existing station label scaling (this was working correctly)
+          document.querySelectorAll('.station-label').forEach(label => {
+              const labelScale = Math.min(1.2, Math.max(0.5, 1 / Math.sqrt(currentScale)));
+              label.style.fontSize = `${12 * labelScale}px`;
+              label.style.transform = 
+                  label.classList.contains('left') || label.classList.contains('right') 
+                      ? `translateY(-50%) scale(${labelScale})`
+                      : `translateX(-50%) scale(${labelScale})`;
+          });
+      }
+      
+      // Handle file selection
+      function handleFileSelect(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+          
+          loadingOverlay.style.display = 'flex';
+          
+          // Reset active region
+          if (activeRegion) {
+              // Deactivate all region buttons
+              document.querySelectorAll('.region-btn').forEach(btn => {
+                  btn.classList.remove('active');
+              });
+              
+              // Reset map content
+              mapContent.innerHTML = '';
+              
+              // Clear active region variables
+              activeRegion = null;
+              currentStation = null;
+              currentRegionStations = [];
+          }
+          
+          const reader = new FileReader();
+          reader.onload = function(e) {
+              const csvData = e.target.result;
+              Papa.parse(csvData, {
+                  header: true,
+                  skipEmptyLines: true,
+                  complete: function(results) {
+                      console.log("CSV Headers:", Object.keys(results.data[0]));
+                      console.log("First row:", results.data[0]);
+ // Check if data exists and is not empty
+if (!results.data || results.data.length === 0) {
+    alert('The CSV file appears to be empty or contains no valid data.');
+    loadingOverlay.style.display = 'none';
+    return;
+}
+
+// Check if first row has data (handles case where CSV only has headers)
+if (results.data.length === 1 && Object.values(results.data[0]).every(val => !val || val.trim() === '')) {
+    alert('The CSV file contains only headers with no data rows.');
+    loadingOverlay.style.display = 'none';
+    return;
+}
+
+// Validate required columns exist
+const requiredColumns = ['Region', 'Grid H', 'Grid V', 'Station Name'];
+const headers = Object.keys(results.data[0] || {});
+const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+
+if (missingColumns.length > 0) {
+    alert(`Missing required columns in CSV file: ${missingColumns.join(', ')}\n\nRequired columns are: ${requiredColumns.join(', ')}`);
+    loadingOverlay.style.display = 'none';
+    return;
+}
+
+// Check if there are any rows with the required data
+const validRows = results.data.filter(row => 
+    row.Region && row.Region.trim() !== '' &&
+    row['Grid H'] && row['Grid H'].trim() !== '' &&
+    row['Grid V'] && row['Grid V'].trim() !== '' &&
+    row['Station Name'] && row['Station Name'].trim() !== ''
+);
+
+if (validRows.length === 0) {
+    alert('No valid data rows found. Please ensure your CSV has rows with Region, Grid H, Grid V, and Station Name filled in.');
+    loadingOverlay.style.display = 'none';
+    return;
+}                     
+                      // Process all data
+                      processCSVData(results.data);
+                      
+                      // Show data summary and activate region buttons
+                      showDataSummary();
+                      
+                      loadingOverlay.style.display = 'none';
+                  },
+                  error: function(error) {
+                      console.error('Error parsing CSV:', error);
+                      alert('Error parsing the CSV file. Please check the file format.');
+                      loadingOverlay.style.display = 'none';
+                  }
+              });
+          };
+          reader.onerror = function() {
+              console.error('Error reading file');
+              alert('Error reading the file. Please try again.');
+              loadingOverlay.style.display = 'none';
+          };
+          reader.readAsText(file);
+      }
+      
+      // Process all CSV data and organize by region
+      function processCSVData(data) {
+          // Store all data
+          allData = data;
+          
+          // Reset region data
+          regionData = {};
+          regionUnitTypes = {};
+          regionShiftTypes = {};
+          
+          // CLEAR ALL EXISTING PROGRESS
+          stationProgress = {};
+          
+          // Group data by region and collect unique types per region
+          allData.forEach((item, index) => {
+              // Add row number for CSV display
+              item._rowNumber = index + 1;
+              
+              // Skip items without a region
+              if (!item.Region) return;
+              
+              // Create region if it doesn't exist
+              if (!regionData[item.Region]) {
+                  regionData[item.Region] = [];
+                  regionUnitTypes[item.Region] = new Set();
+                  regionShiftTypes[item.Region] = new Set();
+              }
+              
+              // Add item to region
+              regionData[item.Region].push(item);
+              
+              // Collect unique unit types and shift types for this region
+              if (item["Unit Type"] && item["Unit Type"].trim()) {
+                  regionUnitTypes[item.Region].add(item["Unit Type"].trim());
+              }
+              if (item["Shift Type"] && item["Shift Type"].trim()) {
+                  regionShiftTypes[item.Region].add(item["Shift Type"].trim());
+              }
+          });
+          
+          // Convert Sets to sorted arrays
+          for (const region in regionUnitTypes) {
+              regionUnitTypes[region] = Array.from(regionUnitTypes[region]).sort();
+              regionShiftTypes[region] = Array.from(regionShiftTypes[region]).sort();
+          }
+          
+          // Initialize station progress tracking for each region
+          for (const region in regionData) {
+              if (!stationProgress[region]) {
+                  stationProgress[region] = {};
+              }
+          }
+          
+          // Enable buttons for regions with data
+          document.querySelectorAll('.region-btn').forEach(btn => {
+              const region = btn.dataset.region;
+              if (regionData[region] && regionData[region].length > 0) {
+                  btn.classList.remove('disabled');
+                  btn.disabled = false;
+              }
+          });
+          
+          // Update region buttons with unit counts
+          updateRegionButtonsProgress();
+      }
+      
+      // Update all region buttons with progress information including color coding
+      function updateRegionButtonsProgress() {
+          let totalUnits = 0;
+          let totalCorrectUnits = 0;
+          
+          // Update each region button
+          document.querySelectorAll('.region-btn').forEach(btn => {
+              const region = btn.dataset.region;
+              if (!regionData[region]) return;
+              
+              // Calculate total units for this region
+              const regionItems = regionData[region];
+              const regionUnitCount = regionItems.length;
+              
+              // Calculate completed units for this region
+              let regionCorrectCount = 0;
+              
+              if (stationProgress[region]) {
+                  // Sum up correct entries from all stations in this region
+                  Object.values(stationProgress[region]).forEach(station => {
+                      regionCorrectCount += Object.keys(station.correctEntries || {}).length;
+                  });
+              }
+              
+              totalUnits += regionUnitCount;
+              totalCorrectUnits += regionCorrectCount;
+              
+              // Calculate percentage for display
+              const percentage = regionUnitCount > 0 ? Math.round((regionCorrectCount / regionUnitCount) * 100) : 0;
+              
+              // Update progress display
+              const progressEl = btn.querySelector('.region-progress');
+              if (progressEl) {
+                  progressEl.textContent = `${regionCorrectCount}/${regionUnitCount} (${percentage}%)`;
+                  
+                  // Generate gradient color from red to green based on percentage
+                  const red = Math.round(255 * (1 - percentage / 100));
+                  const green = Math.round(255 * (percentage / 100));
+                  btn.style.background = `rgb(${red}, ${green}, 0)`;
+                  
+                  // Adjust text color for contrast
+                  if (percentage > 50) {
+                      btn.style.color = 'black';
+                  } else {
+                      btn.style.color = 'white';
+                  }
+                  
+                  // If this is the active region, add enhanced glow effect
+                  if (btn.classList.contains('active')) {
+                      btn.style.boxShadow = `0 0 25px rgba(255, 255, 255, 1.0)`;
+                  } else {
+                      btn.style.boxShadow = 'none';
+                  }
+              }
+          });
+          
+          // Update overall progress in header
+          const overallPercentage = totalUnits > 0 ? Math.round((totalCorrectUnits / totalUnits) * 100) : 0;
+          overallProgress.textContent = `Total: ${totalCorrectUnits}/${totalUnits} (${overallPercentage}%)`;
+      }
+      
+      // Show data summary after loading CSV
+      function showDataSummary() {
+          let summaryHtml = `
+              <div class="alert alert-success">
+                  <h3>CSV Loaded Successfully!</h3>
+                  <p>Data summary by region:</p>
+                  <div class="region-summary">
+          `;
+          
+          // Calculate stations and units for each region
+          for (const region in regionData) {
+              const regionItems = regionData[region];
+              
+              // Get unique stations
+              const stations = new Set();
+              let unitCount = 0;
+              
+              regionItems.forEach(item => {
+                  // Create a unique station key
+                  const stationKey = `${item["Grid H"]}${item["Grid V"]}-${item["Station Name"]}`;
+                  stations.add(stationKey);
+                  unitCount++;
+              });
+              
+              // Add to summary
+              summaryHtml += `
+                  <div class="region-summary-item">
+                      ${region}: ${stations.size} station${stations.size !== 1 ? 's' : ''}, ${unitCount} unit${unitCount !== 1 ? 's' : ''}
+                  </div>
+              `;
+          }
+          
+          summaryHtml += `
+                  </div>
+                  <div class="choose-region-message">Please choose your region</div>
+              </div>
+          `;
+          
+          formContainer.innerHTML = summaryHtml;
+          
+          // Update region buttons with initial progress
+          updateRegionButtonsProgress();
+      }
+      
+      // Load a specific region
+      function loadRegion(region) {
+          // Set active region
+          activeRegion = region;
+          currentStation = null;
+          
+          // Reset map state
+          resetZoom();
+          currentRegionStations = [];
+          
+          // Add metro-region class for Metro regions
+          if (region === 'METRO-WEST' || region === 'METRO-EAST') {
+              mapContainer.classList.add('metro-region');
+          } else {
+              mapContainer.classList.remove('metro-region');
+          }
+          
+          // Show region loading overlay with countdown
+          regionLoadingOverlay.style.display = 'flex';
+          
+          // Start countdown from 5 seconds
+          let countdown = 5;
+          loadingCountdown.textContent = countdown;
+          
+          const countdownInterval = setInterval(() => {
+              countdown--;
+              loadingCountdown.textContent = countdown;
+              
+              if (countdown <= 0) {
+                  clearInterval(countdownInterval);
+                  finishRegionLoading();
+              }
+          }, 1000);
+          
+          // Clear existing content
+          mapContent.innerHTML = '';
+          
+// Load map image with fallback
+function loadMapImage(useJpg = false) {
+    const mapImage = document.createElement('img');
+    mapImage.className = 'map-image';
+    
+    // SharePoint direct links to your images
+    const imageUrls = {
+        'BSW': {
+            jpg: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/BSW.jpg',
+            png: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/BSW.png'
+        },
+        'GRA': {
+            jpg: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/GRA.jpg',
+            png: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/GRA.png'
+        },
+        'LOD': {
+            jpg: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/LOD.jpg',
+            png: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/LOD.png'
+        },
+        'HUM': {
+            jpg: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/HUM.jpg',
+            png: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/HUM.png'
+        },
+        'GIP': {
+            jpg: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/GIP.jpg',
+            png: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/GIP.png'
+        },
+        'METRO-WEST': {
+            jpg: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/METRO-WEST.jpg',
+            png: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/METRO-WEST.png'
+        },
+        'METRO-EAST': {
+            jpg: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/METRO-EAST.jpg',
+            png: 'https://ambulancevic.sharepoint.com/sites/msteams_b4c2ec/Shared%20Documents/General/Quiz/METRO-EAST.png'
+        }
+    };
+    
+    // Try JPG first, then PNG (as requested)
+    const fileExtension = useJpg ? 'jpg' : 'png';
+    mapImage.src = imageUrls[region] ? imageUrls[region][fileExtension] : `${region}.${fileExtension}`;
+    mapImage.alt = `${region} Map`;
+              
+              // When image is loaded, create the grid and process region data
+              mapImage.onload = function() {
+                  // Create grid overlay
+                  const gridOverlay = document.createElement('div');
+                  gridOverlay.className = 'grid-overlay';
+                  gridOverlay.id = 'gridOverlay';
+                  
+                  // Reset map content
+                  mapContent.appendChild(mapImage);
+                  mapContent.appendChild(gridOverlay);
+                  
+                  // Create grid with region-specific dimensions
+                  createGrid(gridOverlay, region);
+                  
+                  // Initialize grid as hidden
+                  gridOverlay.classList.add('hidden-grid');
+                  
+                  // Create station pins container
+                  const stationPins = document.createElement('div');
+                  stationPins.id = 'stationPins';
+                  mapContent.appendChild(stationPins);
+                  
+                  // Process region data
+                  processRegionData(region);
+                  
+                  // Update region buttons progress
+                  updateRegionButtonsProgress();
+              };
+              
+// If JPG fails, try PNG
+mapImage.onerror = function() {
+    if (useJpg) {
+        // Try PNG format
+        loadMapImage(false);
+    } else {
+        // Both formats failed
+        clearInterval(countdownInterval);
+        alert(`Failed to load map for ${region} region. Please check if the ${region}.jpg or ${region}.png file exists.`);
+        regionLoadingOverlay.style.display = 'none';
+    }
+};
+          }
+          
+// Start with JPG format (as requested)
+loadMapImage(true);
+          
+          // Show message to select a station
+          formContainer.innerHTML = `
+              <div class="alert alert-info">
+                  <h3>${region} Region Loaded</h3>
+                  <p>Click on any station pin to begin the quiz for that station.</p>
+              </div>
+          `;
+          
+          // Function to finish loading and hide overlay
+          function finishRegionLoading() {
+              // Hide loading overlay
+              regionLoadingOverlay.style.display = 'none';
+          }
+      }
+      
+      // Parse grid reference to coordinates
+      function parseGridReference(gridRef) {
+          let colStr = '';
+          let rowStr = '';
+          
+          for (let i = 0; i < gridRef.length; i++) {
+              const char = gridRef[i];
+              if (/[A-Z]/i.test(char)) {
+                  colStr += char;
+              } else {
+                  rowStr = gridRef.substring(i);
+                  break;
+              }
+          }
+          
+          // Convert column letters to index
+          let colIndex = 0;
+          if (colStr.length === 1) {
+              colIndex = colStr.toUpperCase().charCodeAt(0) - 65;
+          } else {
+              // Multi-letter column calculation
+              for (let i = 0; i < colStr.length; i++) {
+                  const char = colStr[i];
+                  const value = char.toUpperCase().charCodeAt(0) - 65;
+                  colIndex = colIndex * 26 + value + (i > 0 ? 1 : 0);
+              }
+          }
+          
+          const rowIndex = parseInt(rowStr) - 1;
+          return { col: colIndex, row: rowIndex };
+      }
+      
+      // Simplified station label position determination using CSV data
+      function determineStationLabelPositions(stationPositions) {
+          return stationPositions.map(station => {
+              // Check if this station has a label position specified in CSV
+              const csvLabelPosition = station.entries.find(entry => 
+                  entry.Label && entry.Label.trim() !== ''
+              )?.Label.toLowerCase();
+              
+              const validPositions = ['above', 'below', 'left', 'right'];
+              
+              if (csvLabelPosition && validPositions.includes(csvLabelPosition)) {
+                  return csvLabelPosition;
+              } else {
+                  return 'below'; // Default
+              }
+          });
+      }
+      
+      // Process data for a specific region
+      function processRegionData(region) {
+          // Filter data for this region
+          const filteredData = regionData[region] || [];
+          
+          // If no data found, show message
+          if (filteredData.length === 0) {
+              alert(`No data found for ${region} region`);
+              return;
+          }
+          
+          // Get unique stations (by grid position and station name)
+          const stationMap = new Map();
+          
+          filteredData.forEach(station => {
+              // Create grid reference from Grid H and Grid V columns
+              const gridReference = `${station["Grid H"]}${station["Grid V"]}`;
+              const key = `${gridReference}-${station["Station Name"]}`;
+              
+              if (!stationMap.has(key)) {
+                  stationMap.set(key, {
+                      gridReference: gridReference,
+                      stationName: station["Station Name"],
+                      entries: []
+                  });
+              }
+              stationMap.get(key).entries.push(station);
+          });
+          
+          currentRegionStations = Array.from(stationMap.values());
+          
+          // Initialize station progress tracking if not exists
+          currentRegionStations.forEach(station => {
+              const stationKey = `${station.gridReference}-${station.stationName}`;
+              if (!stationProgress[region]) {
+                  stationProgress[region] = {};
+              }
+              if (!stationProgress[region][stationKey]) {
+                  stationProgress[region][stationKey] = {
+                      percentage: 0,
+                      correctEntries: {},
+                      formValues: {}
+                  };
+              }
+          });
+          
+          // Create pins for each unique station
+          createStationPins();
+      }
+      
+      // Create pins for each unique station
+      function createStationPins() {
+          const stationPins = document.getElementById('stationPins');
+          stationPins.innerHTML = '';
+          
+          // Calculate positions and grid coordinates for all stations
+          const stationPositions = currentRegionStations.map(station => {
+              const position = calculatePositionFromGrid(station.gridReference);
+              const gridCoords = parseGridReference(station.gridReference);
+              return {
+                  ...station,
+                  position: position,
+                  gridCoords: gridCoords
+              };
+          });
+          
+          // Determine label positions using CSV data
+          const labelPositions = determineStationLabelPositions(stationPositions);
+          
+          stationPositions.forEach((station, index) => {
+              // Get station key for progress tracking
+              const stationKey = `${station.gridReference}-${station.stationName}`;
+              
+              // Get grid config for the current region
+              const gridConfig = REGION_GRID_CONFIG[activeRegion];
+              
+              // Calculate station size based on grid cell size
+              const gridCellWidth = mapContent.offsetWidth / gridConfig.cols;
+              const gridCellHeight = mapContent.offsetHeight / gridConfig.rows;
+              
+              // Set station pin size to match one grid cell
+              const stationSize = Math.min(gridCellWidth, gridCellHeight);
+              
+              // Create pin element
+              const pin = document.createElement('div');
+              pin.className = 'station-pin';
+              pin.dataset.station = station.stationName;
+              pin.dataset.grid = station.gridReference;
+              pin.dataset.key = stationKey;
+              pin.style.left = `${station.position.x}%`;
+              pin.style.top = `${station.position.y}%`;
+              pin.style.width = `${stationSize}px`;
+              pin.style.height = `${stationSize}px`;
+              
+              // Create progress circle
+              const progressCircle = document.createElement('div');
+              progressCircle.className = 'progress-circle';
+              progressCircle.textContent = '0%';
+              
+              // Set initial progress from stored value (if exists)
+              if (stationProgress[activeRegion] && stationProgress[activeRegion][stationKey]) {
+                  updateCirclePercentage(progressCircle, stationProgress[activeRegion][stationKey].percentage);
+              } else {
+                  updateCirclePercentage(progressCircle, 0);
+              }
+              
+              pin.appendChild(progressCircle);
+              
+              // Create station label with determined position
+              const label = document.createElement('div');
+              label.className = `station-label ${labelPositions[index]}`;
+              label.textContent = station.stationName;
+              pin.appendChild(label);
+              
+              // Add click event
+              pin.addEventListener('click', () => {
+                  // Save current form state if applicable
+                  if (currentStation) {
+                      saveStationProgress(currentStation);
+                  }
+                  
+                  // Deactivate all pins
+                  document.querySelectorAll('.station-pin').forEach(p => {
+                      p.classList.remove('pin-active');
+                  });
+                  
+                  // Activate this pin
+                  pin.classList.add('pin-active');
+                  
+                  // Set current station
+                  currentStation = stationKey;
+                  
+                  // Show form for this station
+                  showStationForm(station, stationKey);
+              });
+              
+              stationPins.appendChild(pin);
+          });
+          
+          // Apply initial text scaling
+          updateStationTextScaling();
+      }
+      
+      // Update progress circle for a station pin with color coding
+      function updateCirclePercentage(circleElement, percentage) {
+          const text = `${Math.round(percentage)}%`;
+          circleElement.textContent = text;
+          
+          // Update color from red to green based on percentage
+          const red = Math.round(255 * (1 - percentage / 100));
+          const green = Math.round(255 * (percentage / 100));
+          circleElement.style.backgroundColor = `rgb(${red}, ${green}, 0)`;
+          
+          // Apply current text visibility setting
+          if (currentScale > SHOW_TEXT_ZOOM_THRESHOLD) {
+              // Check if in Metro region for special font size
+              if (mapContainer.classList.contains('metro-region')) {
+                  circleElement.style.fontSize = '1.0px';
+              } else {
+                  circleElement.style.fontSize = `${FIXED_FONT_SIZE}px`;
+              }
+          } else {
+              circleElement.style.fontSize = '0px';
+          }
+      }
+      
+      // Update station progress
+      function updateStationProgress(stationKey) {
+          const station = currentRegionStations.find(s => `${s.gridReference}-${s.stationName}` === stationKey);
+          if (!station) return;
+          
+          const totalEntries = station.entries.length;
+          const correctEntries = Object.keys(stationProgress[activeRegion][stationKey].correctEntries).length;
+          const percentage = (correctEntries / totalEntries) * 100;
+          
+          stationProgress[activeRegion][stationKey].percentage = percentage;
+          
+          // Update pin progress circle
+          const pin = document.querySelector(`.station-pin[data-key="${stationKey}"]`);
+          if (pin) {
+              const progressCircle = pin.querySelector('.progress-circle');
+              updateCirclePercentage(progressCircle, percentage);
+          }
+          
+          // Update region buttons progress
+          updateRegionButtonsProgress();
+      }
+      
+      // Save current station progress
+      function saveStationProgress(stationKey) {
+          if (!activeRegion) return;
+          
+          // Get all form inputs
+          const allInputs = formContainer.querySelectorAll('.form-input');
+          const formValues = {};
+          const correctEntries = {};
+          
+          // Check each row for correct entries
+          const rows = formContainer.querySelectorAll('tr[data-row]');
+          rows.forEach((row, rowIndex) => {
+              const inputs = row.querySelectorAll('.form-input');
+              const allCorrect = Array.from(inputs).every(input => input.classList.contains('correct') || input.classList.contains('auto-correct'));
+              
+              if (allCorrect) {
+                  correctEntries[rowIndex] = true;
+              }
+              
+              // Save form values regardless of correctness
+              inputs.forEach(input => {
+                  const fieldName = `${rowIndex}-${input.name}`;
+                  formValues[fieldName] = input.value;
+              });
+          });
+          
+          // Update station progress
+          stationProgress[activeRegion][stationKey].formValues = formValues;
+          stationProgress[activeRegion][stationKey].correctEntries = correctEntries;
+          
+          // Update progress percentage
+          updateStationProgress(stationKey);
+      }
+      
+      // Create the grid overlay
+      function createGrid(gridOverlayElement, region) {
+          // Get grid configuration for this region
+          const gridConfig = REGION_GRID_CONFIG[region] || { rows: 120, cols: 120 };
+          const rowCount = gridConfig.rows;
+          const colCount = gridConfig.cols;
+          
+          // Create horizontal grid lines
+          for (let i = 0; i <= rowCount; i++) {
+              const line = document.createElement('div');
+              line.className = 'grid-line-h';
+              line.style.top = `${(i / rowCount) * 100}%`;
+              gridOverlayElement.appendChild(line);
+          }
+          
+          // Create vertical grid lines
+          for (let i = 0; i <= colCount; i++) {
+              const line = document.createElement('div');
+              line.className = 'grid-line-v';
+              line.style.left = `${(i / colCount) * 100}%`;
+              gridOverlayElement.appendChild(line);
+          }
+          
+          // Create column labels (A, B, C...)
+          for (let i = 0; i < colCount; i++) {
+              // Only create labels for every 5th position to avoid overcrowding
+              if (i % 5 === 0) {
+                  const label = document.createElement('div');
+                  label.className = 'col-label';
+                  
+                  // Handle columns beyond Z (AA, AB, etc.)
+                  let colName = "";
+                  if (i < 26) {
+                      colName = String.fromCharCode(65 + i);
+                  } else {
+                      colName = String.fromCharCode(65 + Math.floor(i / 26) - 1) + 
+                               String.fromCharCode(65 + (i % 26));
+                  }
+                  
+                  label.textContent = colName;
+                  label.style.left = `${((i + 0.5) / colCount) * 100}%`;
+                  gridOverlayElement.appendChild(label);
+              }
+          }
+          
+          // Create row labels (1, 2, 3...)
+          for (let i = 0; i < rowCount; i++) {
+              // Only create labels for every 5th position to avoid overcrowding
+              if (i % 5 === 0) {
+                  const label = document.createElement('div');
+                  label.className = 'row-label';
+                  label.textContent = i + 1;
+                  label.style.top = `${((i + 0.5) / rowCount) * 100}%`;
+                  gridOverlayElement.appendChild(label);
+              }
+          }
+          
+          // Create hover grid cells
+          for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
+              for (let colIdx = 0; colIdx < colCount; colIdx++) {
+                  const cell = document.createElement('div');
+                  cell.className = 'grid-cell';
+                  cell.dataset.col = colIdx;
+                  cell.dataset.row = rowIdx;
+                  
+                  // Calculate cell position and size
+                  cell.style.left = `${(colIdx / colCount) * 100}%`;
+                  cell.style.top = `${(rowIdx / rowCount) * 100}%`;
+                  cell.style.width = `${(1 / colCount) * 100}%`;
+                  cell.style.height = `${(1 / rowCount) * 100}%`;
+                  
+                  // Create grid reference
+                  let colName = "";
+                  if (colIdx < 26) {
+                      colName = String.fromCharCode(65 + colIdx);
+                  } else {
+                      colName = String.fromCharCode(65 + Math.floor(colIdx / 26) - 1) + 
+                               String.fromCharCode(65 + (colIdx % 26));
+                  }
+                  
+                  // Set cell text to be grid reference
+                  cell.textContent = `${colName}${rowIdx + 1}`;
+                  
+                  gridOverlayElement.appendChild(cell);
+              }
+          }
+      }
+      
+      // Toggle grid lines visibility
+      function toggleGridLines() {
+          const gridOverlay = document.getElementById('gridOverlay');
+          if (!gridOverlay) return;
+          
+          if (gridToggle.checked) {
+              gridOverlay.classList.remove('hidden-grid');
+              // Show coordinates display
+              coordinatesDisplay.style.display = 'block';
+		} else {
+              gridOverlay.classList.add('hidden-grid');
+              // Hide coordinates display
+              coordinatesDisplay.style.display = 'none';
+              // Clear any highlighted cells
+              clearGridCellHighlight();
+          }
+      }
+      
+      // Calculate position (x, y) from grid reference (e.g. "V19")
+      function calculatePositionFromGrid(gridRef) {
+          // Extract column letter and row number
+          let colStr = '';
+          let rowStr = '';
+          
+          // Handle multi-letter columns (e.g. "AA", "BC")
+          for (let i = 0; i < gridRef.length; i++) {
+              const char = gridRef[i];
+              if (/[A-Z]/i.test(char)) {
+                  colStr += char;
+              } else {
+                  rowStr = gridRef.substring(i);
+                  break;
+              }
+          }
+          
+          // Convert column letters to index (A=0, B=1, ..., Z=25, AA=26, etc.)
+          let colIndex = 0;
+          if (colStr.length === 1) {
+              colIndex = colStr.toUpperCase().charCodeAt(0) - 65;
+          } else {
+              // Multi-letter column (e.g. "AA" = 26, "AB" = 27)
+              colIndex = 26 * (colStr.length - 1);
+              for (let i = 0; i < colStr.length; i++) {
+                  const char = colStr[i];
+                  const value = char.toUpperCase().charCodeAt(0) - 65;
+                  colIndex += value * Math.pow(26, colStr.length - i - 1);
+              }
+          }
+          
+          // Convert row number to index (1-based to 0-based)
+          const rowIndex = parseInt(rowStr) - 1;
+          
+          // Get grid configuration for current region
+          const gridConfig = REGION_GRID_CONFIG[activeRegion] || { rows: 120, cols: 120 };
+          
+          // Calculate percentage positions based on region-specific grid
+          const x = ((colIndex + 0.5) / gridConfig.cols) * 100;
+          const y = ((rowIndex + 0.5) / gridConfig.rows) * 100;
+          
+          return { x, y };
+      }
+      
+      // Show form for the selected station
+      function showStationForm(station, stationKey) {
+          // Clear any existing form state completely before loading new station
+          const existingInputs = formContainer.querySelectorAll('.form-input');
+          existingInputs.forEach(input => {
+              input.value = '';
+              input.classList.remove('correct', 'incorrect', 'hint-active', 'auto-correct');
+              input.disabled = false;
+          });
+          
+          formContainer.classList.add('active');
+          
+          // Create header
+          let html = `
+              <div class="station-header">
+                  <h2 class="station-name">${station.stationName}</h2>
+                  <div class="station-grid">Grid Reference: ${station.gridReference}</div>
+              </div>
+              
+              <div class="table-responsive">
+                  <table class="quiz-table">
+                      <thead>
+                          <tr>
+                              <th class="unit-number">Unit #</th>
+                              <th class="unit-callsign-column">Unit Callsign</th>
+                              <th class="unit-name-column">Unit Name</th>
+                              <th class="unit-type-column">Unit Type</th>
+                              <th class="shift-type-column">Shift Type</th>
+                              <th class="hint-column">Hint</th>
+                          </tr>
+                      </thead>
+                      <tbody id="quizTableBody">
+          `;
+          
+          // Create rows for each entry
+          const entryCount = station.entries.length;
+          for (let i = 0; i < entryCount; i++) {
+              // Get region-specific dropdown options
+              const unitTypeOptions = regionUnitTypes[activeRegion] || [];
+              const shiftTypeOptions = regionShiftTypes[activeRegion] || [];
+              
+              html += `
+                  <tr data-row="${i}">
+                      <td class="unit-number">${i + 1}</td>
+                      <td class="unit-callsign-column">
+                          <input type="text" class="form-input callsign-input" name="callsign" data-row="${i}" data-field="callsign" maxlength="9">
+                      </td>
+                      <td class="unit-name-column">
+                          <input type="text" class="form-input unit-name-input" name="unitName" data-row="${i}" data-field="unitName" maxlength="30">
+                      </td>
+                      <td class="unit-type-column">
+                          <div class="select-container">
+                              <select class="form-input unit-type-select" name="unitType" data-row="${i}" data-field="unitType">
+                                  <option value="">Select...</option>
+                                  ${unitTypeOptions.map(type => `<option value="${type}">${type}</option>`).join('')}
+                              </select>
+                              <div class="select-arrow">▼</div>
+                          </div>
+                      </td>
+                      <td class="shift-type-column">
+                          <div class="select-container">
+                              <select class="form-input shift-type-select" name="shiftType" data-row="${i}" data-field="shiftType">
+                                  <option value="">Select...</option>
+                                  ${shiftTypeOptions.map(type => `<option value="${type}">${type}</option>`).join('')}
+                              </select>
+                              <div class="select-arrow">▼</div>
+                          </div>
+                      </td>
+                      <td class="hint-column">
+                          <button class="hint-btn" data-row="${i}">Hint</button>
+                      </td>
+                  </tr>
+              `;
+          }
+          
+          html += `
+                      </tbody>
+                  </table>
+              </div>
+              
+              <div class="reset-buttons">
+                  <button class="reset-btn" id="resetStationBtn">Reset Station</button>
+                  <button class="reset-btn secondary" id="resetRegionBtn">Reset Region</button>
+              </div>
+              
+              <div class="show-data-section">
+                  <button class="show-data-btn" id="showStationDataBtn">Show Station CSV Data</button>
+              </div>
+              
+              <div id="stationDataContainer" class="station-data-container">
+                  <h3>Station CSV Data</h3>
+                  <div class="table-responsive">
+                      <table class="station-data-table">
+                          <thead>
+                              <tr>
+                                  <th>Row #</th>
+                                  <th>Region</th>
+                                  <th>Grid H</th>
+                                  <th>Grid V</th>
+                                  <th>Station Name</th>
+                                  <th>Unit Callsign</th>
+                                  <th>Unit Name</th>
+                                  <th>Unit Type</th>
+                                  <th>Shift Type</th>
+                                  <th>Label</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              ${station.entries.map(entry => `
+                                  <tr>
+                                      <td>${entry._rowNumber}</td>
+                                      <td>${entry.Region}</td>
+                                      <td>${entry["Grid H"]}</td>
+                                      <td>${entry["Grid V"]}</td>
+                                      <td>${entry["Station Name"]}</td>
+                                      <td>${entry["Unit Callsign"] || ''}</td>
+                                      <td>${entry["Unit Name"] || ''}</td>
+                                      <td>${entry["Unit Type"] || ''}</td>
+                                      <td>${entry["Shift Type"] || ''}</td>
+                                      <td>${entry["Label"] || ''}</td>
+                                  </tr>
+                              `).join('')}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          `;
+          
+          formContainer.innerHTML = html;
+          
+          // Set up show station data button
+          const showStationDataBtn = document.getElementById('showStationDataBtn');
+          const stationDataContainer = document.getElementById('stationDataContainer');
+          
+          showStationDataBtn.addEventListener('click', function() {
+              // Toggle visibility
+              if (stationDataContainer.style.display === 'block') {
+                  stationDataContainer.style.display = 'none';
+                  showStationDataBtn.textContent = 'Show Station CSV Data';
+              } else {
+                  stationDataContainer.style.display = 'block';
+                  showStationDataBtn.textContent = 'Hide Station CSV Data';
+              }
+          });
+          
+          // Set up reset buttons
+          const resetStationBtn = document.getElementById('resetStationBtn');
+          const resetRegionBtn = document.getElementById('resetRegionBtn');
+          
+          resetStationBtn.addEventListener('click', resetStation);
+          resetRegionBtn.addEventListener('click', resetRegion);
+          
+          // Store the station data for validation
+          formContainer.dataset.stationData = JSON.stringify(station.entries);
+          
+          // Restore any saved form values
+          if (stationProgress[activeRegion] && stationProgress[activeRegion][stationKey]) {
+              const formValues = stationProgress[activeRegion][stationKey].formValues;
+              for (const [fieldName, value] of Object.entries(formValues)) {
+                  const [rowIndex, inputName] = fieldName.split('-');
+                  const input = formContainer.querySelector(`tr[data-row="${rowIndex}"] [name="${inputName}"]`);
+                  if (input) {
+                      input.value = value;
+                  }
+              }
+              
+              // Validate all inputs to restore correct/incorrect status
+              const allInputs = formContainer.querySelectorAll('.form-input');
+              allInputs.forEach(input => {
+                  if (input.value.trim()) {
+                      validateInput(input, station.entries);
+                  }
+              });
+          }
+          
+          // Add event listeners for input validation and hints
+          setupFormEventListeners(station.entries);
+      }
+      
+      // Set up event listeners for the form
+      function setupFormEventListeners(entries) {
+          const allInputs = formContainer.querySelectorAll('.form-input');
+
+          
+// Add input event listeners
+allInputs.forEach(input => {
+    input.addEventListener('input', function() {
+        // Clear validation classes when input changes
+        this.classList.remove('correct', 'incorrect', 'hint-active');
+        
+        // REPLACE THE EXISTING CODE WITH THIS NEW VERSION:
+        
+        // Clear validation classes when input changes
+        this.classList.remove('correct', 'incorrect', 'hint-active');
+        
+        // Add debounced validation with visual feedback
+        clearTimeout(this.validationTimeout);
+        this.classList.add('validating');
+        
+        this.validationTimeout = setTimeout(() => {
+            this.classList.remove('validating');
+            
+            // Only validate if there's content to validate
+            if (this.value.trim()) {
+                const entries = JSON.parse(formContainer.dataset.stationData);
+                validateInput(this, entries);
+            }
+        }, 500);
+        
+        // If this is a callsign field being cleared, immediately clear secondary fields
+        if (this.dataset.field === 'callsign' && this.value.trim() === '') {
+            const row = this.closest('tr');
+            const unitNameInput = row.querySelector('input[name="unitName"]');
+            const unitTypeInput = row.querySelector('select[name="unitType"]');
+            const shiftTypeInput = row.querySelector('select[name="shiftType"]');
+            
+            [unitNameInput, unitTypeInput, shiftTypeInput].forEach(field => {
+                if (field && field.classList.contains('auto-correct')) {
+                    field.value = '';
+                    field.disabled = false;
+                    field.classList.remove('auto-correct', 'correct', 'incorrect');
+                }
+            });
+        }
+    });
+              
+input.addEventListener('blur', function() {
+    // Only validate if this is a callsign field, or if the callsign in this row is correct
+    const fieldType = this.dataset.field;
+    const row = this.closest('tr');
+    const callsignInput = row.querySelector('input[name="callsign"]');
+    
+    if (fieldType === 'callsign' || callsignInput.classList.contains('correct')) {
+        validateInput(this, entries);
+    } else {
+        // Clear secondary fields if callsign is not correct
+        if (this.classList.contains('auto-correct')) {
+            this.value = '';
+            this.disabled = false;
+            this.classList.remove('auto-correct', 'correct', 'incorrect');
+        }
+    }
+    
+    // Update station progress if current station exists
+    if (currentStation && activeRegion) {
+        saveStationProgress(currentStation);
+    }
+});
+              
+              // For dropdowns, validate immediately on change
+              if (input.tagName === 'SELECT') {
+                  input.addEventListener('change', function() {
+                      validateInput(this, entries);
+                      // Update station progress if current station exists
+                      if (currentStation && activeRegion) {
+                          saveStationProgress(currentStation);
+                      }
+                  });
+              }
+          });
+          
+// Use event delegation for hint buttons to prevent memory leaks
+formContainer.addEventListener('mousedown', function(e) {
+    if (e.target.classList.contains('hint-btn')) {
+        const rowIndex = parseInt(e.target.dataset.row);
+        const entries = JSON.parse(formContainer.dataset.stationData);
+        showContextualHint(rowIndex, entries);
+    }
+});
+
+formContainer.addEventListener('mouseup', function(e) {
+    if (e.target.classList.contains('hint-btn')) {
+        clearHint();
+    }
+});
+
+formContainer.addEventListener('mouseleave', function(e) {
+    if (e.target.classList.contains('hint-btn')) {
+        clearHint();
+    }
+});
+      }
+      
+      // Show contextual hint based on what's already correct in the row
+      function showContextualHint(rowIndex, entries) {
+          const row = document.querySelector(`tr[data-row="${rowIndex}"]`);
+          const callsignInput = row.querySelector('input[name="callsign"]');
+          const unitNameInput = row.querySelector('input[name="unitName"]');
+          
+          // Don't replace fields that are already correct
+          if (callsignInput.classList.contains('correct') && unitNameInput.classList.contains('correct')) {
+              return; // Both are correct, no hint needed
+          }
+          
+          // Clear any existing hint
+          clearHint();
+          
+          // Get all correctly entered values across the entire station
+          const allCorrectCallsigns = new Set();
+          const allCorrectUnitNames = new Set();
+          
+          formContainer.querySelectorAll('input[name="callsign"].correct').forEach(input => {
+              if (input.value.trim()) allCorrectCallsigns.add(input.value.trim().toLowerCase());
+          });
+          
+          formContainer.querySelectorAll('input[name="unitName"].correct').forEach(input => {
+              if (input.value.trim()) allCorrectUnitNames.add(input.value.trim().toLowerCase());
+          });
+          
+          // Check if callsign is correct in this row
+          if (callsignInput.classList.contains('correct') && callsignInput.value.trim()) {
+              // Callsign is correct, find the corresponding unit name
+              const callsignValue = callsignInput.value.trim();
+const matchingEntry = entries.find(entry => 
+    callsignValue.toLowerCase() === (entry['Unit Callsign'] || '').toLowerCase()
+);
+              
+if (matchingEntry && matchingEntry['Unit Name'] && 
+    matchingEntry['Unit Name'].trim() !== '' &&
+    !unitNameInput.classList.contains('correct') &&
+    !allCorrectUnitNames.has(matchingEntry['Unit Name'].toLowerCase())) {
+    // Show unit name hint
+    activeHintField = unitNameInput;
+    unitNameInput.value = matchingEntry['Unit Name'];
+    unitNameInput.classList.add('hint-active');
+}
+          }
+          // Check if unit name is correct in this row
+          else if (unitNameInput.classList.contains('correct') && unitNameInput.value.trim()) {
+              // Unit name is correct, find the corresponding callsign
+              const unitNameValue = unitNameInput.value.trim();
+              const matchingEntry = entries.find(entry => 
+                  fuzzyMatch(unitNameValue, entry['Unit Name'])
+              );
+              
+if (matchingEntry && matchingEntry['Unit Callsign'] && 
+    matchingEntry['Unit Callsign'].trim() !== '' &&
+    !callsignInput.classList.contains('correct') &&
+    !allCorrectCallsigns.has(matchingEntry['Unit Callsign'].toLowerCase())) {
+    // Show callsign hint
+    activeHintField = callsignInput;
+    callsignInput.value = matchingEntry['Unit Callsign'];
+    callsignInput.classList.add('hint-active');
+}
+          }
+          // Neither is correct, show random hint filtered by what's already shown
+          else {
+              // Filter out entries that are already correctly displayed elsewhere
+  // Filter entries that have non-blank values and aren't already shown
+const availableEntries = entries.filter(entry => {
+    const hasValidCallsign = entry['Unit Callsign'] && entry['Unit Callsign'].trim() !== '';
+    const hasValidUnitName = entry['Unit Name'] && entry['Unit Name'].trim() !== '';
+    
+    const callsignAvailable = hasValidCallsign && !allCorrectCallsigns.has(entry['Unit Callsign'].toLowerCase());
+    const unitNameAvailable = hasValidUnitName && !allCorrectUnitNames.has(entry['Unit Name'].toLowerCase());
+    
+    return callsignAvailable || unitNameAvailable;
+});
+              
+              if (availableEntries.length > 0) {
+                  const randomEntry = availableEntries[Math.floor(Math.random() * availableEntries.length)];
+                  const giveCallsign = Math.random() < 0.5;
+                  
+// Determine which field to show based on what's available for this entry
+const canShowCallsign = randomEntry['Unit Callsign'] && 
+    randomEntry['Unit Callsign'].trim() !== '' &&
+    !allCorrectCallsigns.has(randomEntry['Unit Callsign'].toLowerCase());
+    
+const canShowUnitName = randomEntry['Unit Name'] && 
+    randomEntry['Unit Name'].trim() !== '' &&
+    !allCorrectUnitNames.has(randomEntry['Unit Name'].toLowerCase());
+
+if (giveCallsign && canShowCallsign) {
+    // Give callsign hint
+    activeHintField = callsignInput;
+    callsignInput.value = randomEntry['Unit Callsign'];
+    callsignInput.classList.add('hint-active');
+} else if (canShowUnitName) {
+    // Give unit name hint (fallback if callsign not available)
+    activeHintField = unitNameInput;
+    unitNameInput.value = randomEntry['Unit Name'];
+    unitNameInput.classList.add('hint-active');
+} else if (canShowCallsign) {
+    // Fallback to callsign if unit name not available
+    activeHintField = callsignInput;
+    callsignInput.value = randomEntry['Unit Callsign'];
+    callsignInput.classList.add('hint-active');
+}
+              }
+          }
+      }
+      
+      // Clear current hint with proper validation
+      function clearHint() {
+          if (activeHintField) {
+              activeHintField.value = '';
+              activeHintField.classList.remove('hint-active');
+              
+              // Re-validate the now-empty field
+              const entries = JSON.parse(formContainer.dataset.stationData);
+              validateInput(activeHintField, entries);
+              
+              activeHintField = null;
+          }
+      }
+      
+      // Check if a field is blank in CSV
+      function isBlankInCSV(entry, field) {
+          return !entry[field] || entry[field].trim() === '';
+      }
+      
+      // Validate a single input with comprehensive logic including auto-correct for blank fields
+      function validateInput(input, entries) {
+          const value = input.value.trim();
+          const fieldType = input.dataset.field;
+          const row = input.closest('tr');
+          
+          // Map field names to the CSV column names
+          const fieldMap = {
+              'callsign': 'Unit Callsign',
+              'unitName': 'Unit Name',
+              'unitType': 'Unit Type',
+              'shiftType': 'Shift Type'
+          };
+          
+          const csvField = fieldMap[fieldType];
+          
+          // For callsign validation - this is the primary field
+          if (fieldType === 'callsign') {
+              if (!value) {
+                  // Empty callsign - check if any CSV entry has empty callsign
+                  const hasEmptyCallsign = entries.some(entry => isBlankInCSV(entry, 'Unit Callsign'));
+                  if (hasEmptyCallsign) {
+                      input.classList.add('correct');
+                      input.classList.remove('incorrect');
+                  } else {
+                      input.classList.remove('correct', 'incorrect');
+                  }
+                  return;
+              }
+              
+              // Find matching entry based on callsign
+const matchingEntry = entries.find(entry => 
+    value.toLowerCase() === (entry['Unit Callsign'] || '').toLowerCase()
+);
+              
+              if (matchingEntry) {
+                  input.classList.add('correct');
+                  input.classList.remove('incorrect');
+                  
+                  // Now validate other fields in this row against the matched entry
+                  const unitNameInput = row.querySelector('input[name="unitName"]');
+                  const unitTypeInput = row.querySelector('select[name="unitType"]');
+                  const shiftTypeInput = row.querySelector('select[name="shiftType"]');
+                  
+                  // Auto-correct blank fields and validate others
+                  validateSecondaryField(unitNameInput, matchingEntry, 'Unit Name');
+                  validateSecondaryField(unitTypeInput, matchingEntry, 'Unit Type');
+                  validateSecondaryField(shiftTypeInput, matchingEntry, 'Shift Type');
+} else {
+    input.classList.add('incorrect');
+    input.classList.remove('correct');
+    
+    // Clear and re-enable all secondary fields in this row when callsign becomes incorrect
+    const unitNameInput = row.querySelector('input[name="unitName"]');
+    const unitTypeInput = row.querySelector('select[name="unitType"]');
+    const shiftTypeInput = row.querySelector('select[name="shiftType"]');
+    
+    [unitNameInput, unitTypeInput, shiftTypeInput].forEach(field => {
+        if (field && field.classList.contains('auto-correct')) {
+            field.value = '';
+            field.disabled = false;
+            field.classList.remove('auto-correct', 'correct', 'incorrect');
+        }
+    });
+}
+          } else {
+              // For other fields (unitName, unitType, shiftType)
+              // Only validate if there's a valid callsign in this row
+              const callsignInput = row.querySelector('input[name="callsign"]');
+              
+if (!callsignInput.classList.contains('correct')) {
+    // No valid callsign, so reset and disable validation for other fields
+    if (input.classList.contains('auto-correct')) {
+        input.value = '';
+    }
+    input.classList.remove('correct', 'incorrect', 'auto-correct');
+    input.disabled = false;
+    return;
+}
+              
+              // Find the entry that matches the callsign
+              const callsignValue = callsignInput.value.trim();
+const matchingEntry = entries.find(entry => 
+    callsignValue.toLowerCase() === (entry['Unit Callsign'] || '').toLowerCase()
+);              
+              if (!matchingEntry) {
+                  input.classList.remove('correct', 'incorrect', 'auto-correct');
+                  input.disabled = false;
+                  return;
+              }
+              
+              // Validate this field against the matched entry
+              validateSecondaryField(input, matchingEntry, csvField);
+          }
+      }
+      
+      // Validate secondary fields with auto-correct for blank CSV fields
+      function validateSecondaryField(input, matchingEntry, csvField) {
+          if (!input) return;
+          
+          const value = input.value.trim();
+          const isCSVBlank = isBlankInCSV(matchingEntry, csvField);
+          
+          if (isCSVBlank) {
+              // CSV field is blank, auto-mark as correct and disable
+              input.value = 'n/a';
+              input.disabled = true;
+              input.classList.add('auto-correct');
+              input.classList.remove('correct', 'incorrect');
+          } else {
+              // CSV field has a value, validate normally
+              input.disabled = false;
+              input.classList.remove('auto-correct');
+              
+              if (value === '' || value === 'n/a') {
+                  input.classList.remove('correct', 'incorrect');
+              } else {
+                  let isValid = false;
+                  if (csvField === 'Unit Name') {
+                      isValid = fuzzyMatch(value, matchingEntry[csvField]);
+                  } else {
+                      // For unit type and shift type, exact match
+                      isValid = value === matchingEntry[csvField];
+                  }
+                  
+                  if (isValid) {
+                      input.classList.add('correct');
+                      input.classList.remove('incorrect');
+                  } else {
+                      input.classList.add('incorrect');
+                      input.classList.remove('correct');
+                  }
+              }
+          }
+      }
+      
+      // Enhanced fuzzy matching for text inputs with single-word typo support
+      function fuzzyMatch(userInput, correctValue) {
+          if (!userInput || !correctValue) return false;
+          
+          const user = userInput.toLowerCase().trim();
+          const correct = correctValue.toLowerCase().trim();
+          
+          // Exact match
+          if (user === correct) return true;
+          
+// Substring matching with proportional length requirement
+const minLength = Math.max(3, Math.floor(correct.length * 0.80)); // At least 80% of correct length
+if (user.length >= minLength && (correct.includes(user) || user.includes(correct))) return true;
+          
+          // For single words, use more lenient character-level similarity
+          const userWords = user.split(/\s+/);
+          const correctWords = correct.split(/\s+/);
+          
+          if (userWords.length === 1 && correctWords.length === 1) {
+              // Single word comparison - more lenient threshold
+              return characterSimilarity(userWords[0], correctWords[0]) >= 0.77;
+          }
+          
+          // Multi-word comparison
+          let matchedWords = 0;
+          userWords.forEach(word => {
+              if (correctWords.some(cWord => 
+                  cWord === word || 
+                  cWord.includes(word) || 
+                  word.includes(cWord) ||
+                  characterSimilarity(word, cWord) >= 0.77
+              )) {
+                  matchedWords++;
+              }
+          });
+          
+          const similarity = matchedWords / Math.max(userWords.length, correctWords.length);
+          return similarity >= 0.75;
+      }
+      
+      // More lenient character similarity function
+      function characterSimilarity(str1, str2) {
+          if (str1 === str2) return 1;
+          
+          const maxLength = Math.max(str1.length, str2.length);
+          const minLength = Math.min(str1.length, str2.length);
+          
+          // More lenient length check
+          if (minLength / maxLength < 0.5) return 0;
+          
+          // Count matching characters (order doesn't matter much)
+          let matches = 0;
+          const chars1 = str1.split('');
+          const chars2 = str2.split('');
+          
+          chars1.forEach(char => {
+              const index = chars2.indexOf(char);
+              if (index !== -1) {
+                  matches++;
+                  chars2.splice(index, 1); // Remove matched character
+              }
+          });
+          
+          // Calculate similarity as ratio of matched characters
+          return matches / maxLength;
+      }
+  </script>
+</body>
+</html>	  
