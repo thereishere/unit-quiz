@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TZV GPS Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                padding: 40px;
+                max-width: 600px;
+            }
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        @media (min-width: 768px) {
+            h1 {
+                margin-bottom: 30px;
+                font-size: 2.2em;
+            }
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        @media (min-width: 768px) {
+            label {
+                font-size: 16px;
+            }
+        }
+
+        .coordinate-container {
+            position: relative;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .coordinate-container:focus-within {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .coordinate-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            font-family: monospace;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 1px;
+            color: #333;
+            position: relative;
+            z-index: 2;
+            white-space: pre-line;
+            line-height: 1.4;
+            resize: none;
+            overflow: hidden;
+            height: 60px;
+        }
+
+        .coordinate-input:focus {
+            outline: none;
+        }
+
+        .coordinate-labels {
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            font-size: 12px;
+            font-family: sans-serif;
+            color: #bbb;
+            pointer-events: none;
+            z-index: 1;
+            line-height: 1.4;
+            font-weight: 400;
+        }
+
+        .coordinate-labels .label-line {
+            height: 22px;
+            display: flex;
+            align-items: center;
+        }
+
+        .convert-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 25px 0;
+            touch-action: manipulation;
+        }
+
+        .convert-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .convert-btn:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .result-value {
+            color: #666;
+            font-family: monospace;
+            font-size: 13px;
+            word-break: break-all;
+            padding: 12px;
+            background: #f1f3f4;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+            line-height: 1.6;
+        }
+
+        @media (min-width: 768px) {
+            .result-value {
+                font-size: 14px;
+            }
+        }
+
+        .result-value a {
+            color: #1976d2;
+            text-decoration: none;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        .result-value a:hover {
+            text-decoration: underline;
+            color: #0d47a1;
+        }
+
+        .result-value a:visited {
+            color: #7b1fa2;
+        }
+
+        .copy-all-btn {
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            touch-action: manipulation;
+        }
+
+        .copy-all-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .copy-all-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-all-btn.copied {
+            background: #17a2b8;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #dc3545;
+            font-size: 14px;
+        }
+
+        .clear-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 10px;
+            touch-action: manipulation;
+        }
+
+        .clear-btn:hover {
+            background: #5a6268;
+        }
+
+        .dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .dialog-box {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .dialog-title {
+            color: #f39c12;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .dialog-message {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        .dialog-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .dialog-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+
+        .dialog-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .dialog-btn.primary:hover {
+            background: #5a6fd8;
+        }
+
+        .dialog-btn.secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .dialog-btn.secondary:hover {
+            background: #5a6268;
+        }
+
+        .map-container {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .map-header {
+            margin-bottom: 15px;
+            font-weight: 500;
+            color: #333;
+            text-align: center;
+        }
+
+        .map-frame {
+            width: 100%;
+            height: 300px;
+            border: none;
+            border-radius: 8px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        @media (min-width: 768px) {
+            .map-frame {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ TZV GPS Converter</h1>
+
+        <div class="input-group">
+            <label>GPS Format 1 (Decimal) eg. +142.51402, -36.91827:</label>
+            <div class="coordinate-container">
+                <textarea class="coordinate-input input-line" id="format1-input" 
+                       inputmode="numeric" autocomplete="off" rows="2"></textarea>
+                <div class="coordinate-labels">
+                    <div class="label-line">Longitude</div>
+                    <div class="label-line">Latitude</div>
+                </div>
+            </div>
+            <button class="clear-btn" onclick="clearFormat1()">Clear</button>
+        </div>
+
+        <div class="input-group">
+            <label>GPS Format 2 (DMS) eg. +142:30:50.4780, -36:55:05.7793:</label>
+            <div class="coordinate-container">
+                <textarea class="coordinate-input input-line" id="format2-input" 
+                       inputmode="numeric" autocomplete="off" rows="2"></textarea>
+                <div class="coordinate-labels">
+                    <div class="label-line">Longitude</div>
+                    <div class="label-line">Latitude</div>
+                </div>
+            </div>
+            <button class="clear-btn" onclick="clearFormat2()">Clear</button>
+        </div>
+
+        <button class="convert-btn" onclick="convertCoordinates()">Convert & Generate Links</button>
+
+        <div id="results" class="results" style="display: none;">
+            <div class="result-item">
+                <div style="margin-bottom: 10px; font-weight: 500; color: #333;">Results:</div>
+                <div id="combined-results" class="result-value"></div>
+                <button class="copy-all-btn" onclick="copyAllText()" id="copy-btn">📋 Copy All</button>
+            </div>
+        </div>
+
+        <div id="map-section" class="map-container" style="display: none;">
+            <div class="map-header">📍 Location Map</div>
+            <iframe id="map-frame" class="map-frame" src="" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+                Loading map...
+            </iframe>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        let format1Data = { lng: '', lat: '' };
+        let format2Data = { lng: '', lat: '' };
+        let format1Cursor = 'lng';
+        let format2Cursor = 'lng';
+
+        function updateFormat1Display() {
+            const input = document.getElementById('format1-input');
+            
+            // Update input display with line break between lat/long
+            let displayValue = '';
+            if (format1Data.lng) {
+                displayValue += format1Data.lng;
+            }
+            if (format1Data.lng && format1Data.lat) {
+                displayValue += '\n';
+            }
+            if (format1Data.lat) {
+                displayValue += format1Data.lat;
+            }
+            
+            // Set cursor position at end
+            input.value = displayValue;
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+
+        function updateFormat2Display() {
+            const input = document.getElementById('format2-input');
+            
+            // Update input display with line break between lat/long
+            let displayValue = '';
+            if (format2Data.lng) {
+                displayValue += format2Data.lng;
+            }
+            if (format2Data.lng && format2Data.lat) {
+                displayValue += '\n';
+            }
+            if (format2Data.lat) {
+                displayValue += format2Data.lat;
+            }
+            
+            // Set cursor position at end
+            input.value = displayValue;
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+
+        // Format 1 input handling
+        document.getElementById('format1-input').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[\n\r,\s]/g, '').replace(/[^\d]/g, '');
+            
+            // Auto-flow logic for Format 1
+            if (value.length <= 8) {
+                // Still filling longitude
+                format1Data.lng = '+' + value.substring(0, 3) + (value.length > 3 ? '.' + value.substring(3) : '');
+                format1Data.lat = '';
+                format1Cursor = 'lng';
+            } else {
+                // Flow to latitude
+                const lngDigits = value.substring(0, 8);
+                const latDigits = value.substring(8, 15);
+                
+                format1Data.lng = '+' + lngDigits.substring(0, 3) + '.' + lngDigits.substring(3);
+                format1Data.lat = '-' + latDigits.substring(0, 2) + (latDigits.length > 2 ? '.' + latDigits.substring(2) : '');
+                format1Cursor = 'lat';
+            }
+            
+            updateFormat1Display();
+        });
+
+        // Format 2 input handling
+        document.getElementById('format2-input').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[\n\r,\s]/g, '').replace(/[^\d]/g, '');
+            
+            // Auto-flow logic for Format 2
+            if (value.length <= 11) {
+                // Still filling longitude
+                const digits = value;
+                format2Data.lng = '+' + digits.substring(0, 3) + 
+                                 (digits.length > 3 ? ':' + digits.substring(3, 5) : '') +
+                                 (digits.length > 5 ? ':' + digits.substring(5, 7) : '') +
+                                 (digits.length > 7 ? '.' + digits.substring(7) : '');
+                format2Data.lat = '';
+                format2Cursor = 'lng';
+            } else {
+                // Flow to latitude
+                const lngDigits = value.substring(0, 11);
+                const latDigits = value.substring(11, 21);
+                
+                format2Data.lng = '+' + lngDigits.substring(0, 3) + ':' + 
+                                 lngDigits.substring(3, 5) + ':' + 
+                                 lngDigits.substring(5, 7) + '.' + 
+                                 lngDigits.substring(7);
+                
+                format2Data.lat = '-' + latDigits.substring(0, 2) + 
+                                 (latDigits.length > 2 ? ':' + latDigits.substring(2, 4) : '') +
+                                 (latDigits.length > 4 ? ':' + latDigits.substring(4, 6) : '') +
+                                 (latDigits.length > 6 ? '.' + latDigits.substring(6) : '');
+                format2Cursor = 'lat';
+            }
+            
+            updateFormat2Display();
+        });
+
+        // Clear functions
+        function clearFormat1() {
+            format1Data = { lng: '', lat: '' };
+            format1Cursor = 'lng';
+            document.getElementById('format1-input').value = '';
+            updateFormat1Display();
+        }
+
+        function clearFormat2() {
+            format2Data = { lng: '', lat: '' };
+            format2Cursor = 'lng';
+            document.getElementById('format2-input').value = '';
+            updateFormat2Display();
+        }
+
+        // Enter key handling
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                convertCoordinates();
+            }
+        });
+
+        function convertCoordinates() {
+            const resultsDiv = document.getElementById('results');
+            const errorDiv = document.getElementById('error');
+            const mapSection = document.getElementById('map-section');
+            
+            resultsDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+            mapSection.style.display = 'none';
+            
+            let lat = null, lng = null;
+            let format1HasData = format1Data.lng || format1Data.lat;
+            let format2HasData = format2Data.lng || format2Data.lat;
+            
+            // Check if both formats have data
+            if (format1HasData && format2HasData) {
+                showFormatConflictDialog();
+                return;
+            }
+            
+            // Check Format 1
+            if (format1Data.lng && format1Data.lat) {
+                lng = parseFloat(format1Data.lng.replace(/[^\d.-]/g, ''));
+                lat = parseFloat(format1Data.lat.replace(/[^\d.-]/g, ''));
+                lat = -Math.abs(lat); // Ensure negative for southern hemisphere
+            }
+            // Check Format 2
+            else if (format2Data.lng && format2Data.lat) {
+                lng = parseDMS(format2Data.lng);
+                lat = -Math.abs(parseDMS(format2Data.lat.replace('-', '')));
+            }
+            
+            if (lat === null || lng === null) {
+                showError('Please enter coordinates in either format.');
+                return;
+            }
+            
+            // Validate Victoria region (expanded range)
+            if (lat > -33 || lat < -40 || lng < 140 || lng > 151) {
+                showError('Coordinates appear to be outside Victoria, Australia region.');
+                return;
+            }
+            
+            displayResults(lat, lng);
+        }
+
+        function showFormatConflictDialog() {
+            const dialog = document.createElement('div');
+            dialog.className = 'dialog-overlay';
+            dialog.innerHTML = `
+                <div class="dialog-box">
+                    <div class="dialog-title">⚠️ Multiple Formats Detected</div>
+                    <div class="dialog-message">
+                        You have entered coordinates in both Format 1 and Format 2. 
+                        Please clear one format before converting to avoid confusion.
+                    </div>
+                    <div class="dialog-buttons">
+                        <button class="dialog-btn primary" onclick="clearFormat1(); closeDialog()">Clear Format 1</button>
+                        <button class="dialog-btn primary" onclick="clearFormat2(); closeDialog()">Clear Format 2</button>
+                        <button class="dialog-btn secondary" onclick="closeDialog()">Cancel</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(dialog);
+            
+            // Close on overlay click
+            dialog.addEventListener('click', function(e) {
+                if (e.target === dialog) {
+                    closeDialog();
+                }
+            });
+        }
+
+        function closeDialog() {
+            const dialog = document.querySelector('.dialog-overlay');
+            if (dialog) {
+                dialog.remove();
+            }
+        }
+
+        function parseDMS(dmsStr) {
+            const parts = dmsStr.replace('-', '').split(':');
+            if (parts.length !== 3) return null;
+            
+            const degrees = parseFloat(parts[0]);
+            const minutes = parseFloat(parts[1]);
+            const seconds = parseFloat(parts[2]);
+            
+            return degrees + minutes/60 + seconds/3600;
+        }
+
+        async function displayResults(lat, lng) {
+            const resultsDiv = document.getElementById('results');
+            const mapSection = document.getElementById('map-section');
+            const decimalCoords = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            const shortLink = `https://maps.google.com/?q=${lat},${lng}`;
+            
+            let address = 'Looking up detailed address...';
+            
+            let combinedResults = `<div style="margin-bottom: 8px;">${decimalCoords}</div>
+<div style="margin-bottom: 4px;"><a href="${shortLink}" target="_blank">Open Coordinates in Google Maps</a></div>
+<div style="margin-bottom: 12px; font-size: 12px; color: #888;">${shortLink}</div>
+<div style="margin-bottom: 8px;">${address}</div>`;
+            
+            document.getElementById('combined-results').innerHTML = combinedResults;
+            resultsDiv.style.display = 'block';
+            
+            // Show and load the map
+            displayMap(lat, lng);
+            mapSection.style.display = 'block';
+            
+            // Address lookup
+            let finalAddress = await tryMultipleGeocodingServices(lat, lng);
+            
+            if (finalAddress) {
+                address = finalAddress;
+            } else {
+                address = 'Detailed address not available';
+            }
+            
+            combinedResults = `<div style="margin-bottom: 8px;">${decimalCoords}</div>
+<div style="margin-bottom: 4px;"><a href="${shortLink}" target="_blank">Open Coordinates in Google Maps</a></div>
+<div style="margin-bottom: 12px; font-size: 12px; color: #888;">${shortLink}</div>
+<div style="margin-bottom: 8px;">${address}</div>`;
+            
+            document.getElementById('combined-results').innerHTML = combinedResults;
+        }
+
+        function displayMap(lat, lng) {
+            const mapFrame = document.getElementById('map-frame');
+            
+            // For a more reliable approach without API key, use the standard embed format
+            const embedUrl = `https://www.google.com/maps?q=${lat},${lng}&hl=en&z=16&output=embed`;
+            
+            mapFrame.src = embedUrl;
+            mapFrame.style.background = 'white';
+        }
+
+        async function tryMultipleGeocodingServices(lat, lng) {
+            const services = [
+                async () => {
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&extratags=1`);
+                        const data = await response.json();
+                        
+                        if (data && data.address) {
+                            const addr = data.address;
+                            const parts = [];
+                            
+                            if (addr.house_number) parts.push(addr.house_number);
+                            if (addr.road) parts.push(addr.road);
+                            else if (addr.pedestrian) parts.push(addr.pedestrian);
+                            else if (addr.footway) parts.push(addr.footway);
+                            
+                            if (addr.suburb) parts.push(addr.suburb);
+                            else if (addr.neighbourhood) parts.push(addr.neighbourhood);
+                            else if (addr.city) parts.push(addr.city);
+                            
+                            if (addr.state) parts.push(addr.state);
+                            if (addr.postcode) parts.push(addr.postcode);
+                            
+                            if (parts.length >= 2) {
+                                return parts.join(', ');
+                            }
+                        }
+                        return null;
+                    } catch (error) {
+                        return null;
+                    }
+                },
+                
+                async () => {
+                    try {
+                        const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
+                        const data = await response.json();
+                        
+                        if (data) {
+                            const parts = [];
+                            
+                            if (data.houseNumber) parts.push(data.houseNumber);
+                            if (data.street) parts.push(data.street);
+                            else if (data.road) parts.push(data.road);
+                            
+                            if (data.locality) parts.push(data.locality);
+                            else if (data.city) parts.push(data.city);
+                            
+                            if (data.principalSubdivision) parts.push(data.principalSubdivision);
+                            if (data.postcode) parts.push(data.postcode);
+                            
+                            if (parts.length >= 2) {
+                                return parts.join(', ');
+                            }
+                        }
+                        return null;
+                    } catch (error) {
+                        return null;
+                    }
+                }
+            ];
+            
+            for (const service of services) {
+                const result = await service();
+                if (result && result.length > 20) {
+                    return result;
+                }
+            }
+            
+            for (const service of services) {
+                const result = await service();
+                if (result) {
+                    return result;
+                }
+            }
+            
+            return null;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function copyAllText() {
+            const copyBtn = document.getElementById('copy-btn');
+            
+            try {
+                const coords = document.querySelector('#combined-results div:first-child').textContent;
+                const coordLink = document.querySelector('#combined-results div:nth-child(3)').textContent;
+                const address = document.querySelector('#combined-results div:nth-child(4)').textContent;
+                
+                const textToCopy = `${coords}
+${coordLink}
+${address}`;
+                
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    copyBtn.textContent = '✅ Copied!';
+                    copyBtn.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        copyBtn.textContent = '📋 Copy All';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                });
+            } catch (err) {
+                copyBtn.textContent = '❌ Copy Failed';
+                setTimeout(() => {
+                    copyBtn.textContent = '📋 Copy All';
+                }, 2000);
+            }
+        }
+
+        // Initialize displays
+        updateFormat1Display();
+        updateFormat2Display();
+    </script>
+</body>
+</html>
